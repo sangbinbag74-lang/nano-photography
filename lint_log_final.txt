@@ -1,0 +1,40 @@
+
+> nano-photography@0.1.0 lint
+> eslint
+
+
+C:\01 Ai\19 나노 포토그래피\nano-photography\src\app\gallery\page.tsx
+  68:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\01 Ai\19 나노 포토그래피\nano-photography\src\app\page.tsx
+  14:10  warning  'ArrowLeft' is defined but never used                 @typescript-eslint/no-unused-vars
+  20:10  warning  'selectedFile' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  20:24  warning  'setSelectedFile' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  77:47  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  92:54  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+
+C:\01 Ai\19 나노 포토그래피\nano-photography\src\components\GoogleLoginButton.tsx
+   4:27  warning  'GoogleAuthProvider' is defined but never used                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  40:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\01 Ai\19 나노 포토그래피\nano-photography\src\components\ImageUploader.tsx
+  56:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\01 Ai\19 나노 포토그래피\nano-photography\src\components\ResultViewer.tsx
+  45:67  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  51:74  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  61:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  72:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\01 Ai\19 나노 포토그래피\nano-photography\src\components\StyleSelector.tsx
+   4:10  warning  'clsx' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  30:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\01 Ai\19 나노 포토그래피\nano-photography\src\lib\firestore.ts
+  5:16  warning  'uuidv4' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\01 Ai\19 나노 포토그래피\nano-photography\src\lib\gemini.ts
+  71:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 17 problems (4 errors, 13 warnings)
+
