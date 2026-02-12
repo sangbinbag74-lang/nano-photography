@@ -21,9 +21,11 @@ export default function GoogleLoginButton() {
     const handleLogin = async () => {
         try {
             await signInWithPopup(auth, googleProvider);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Login failed", error);
-            alert("Login failed. Please inspect console.");
+            const errorMessage = error?.message || "Unknown error";
+            const errorCode = error?.code || "No code";
+            alert(`Login Failed: ${errorMessage} (${errorCode})`);
         }
     };
 
