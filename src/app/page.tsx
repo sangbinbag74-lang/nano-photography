@@ -144,8 +144,8 @@ export default function Home() {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-6 md:px-12 backdrop-blur-sm bg-black/30 border-b border-white/5 transition-all duration-300">
         <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/40 group-hover:shadow-blue-600/60 transition-all duration-500">
-            <span className="text-sm font-bold text-white">N</span>
+          <div className="w-10 h-10 rounded-xl overflow-hidden relative shadow-lg shadow-blue-900/20">
+            <img src="/logo.svg" alt="Nano Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-lg font-medium tracking-tight text-white/90 group-hover:text-white transition-colors">
             Nano Photography

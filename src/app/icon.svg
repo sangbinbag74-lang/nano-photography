@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="128" fill="#0A0A0A"/>
+  
+  <defs>
+    <linearGradient id="dotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(136, 136)">
+    <!-- N Shape - Modern Sans Serif Bold -->
+    <path d="M0 240V0H60L160 160V0H220V240H160L60 80V240H0Z" fill="white"/>
+    
+    <!-- Nano Dot -->
+    <circle cx="280" cy="210" r="30" fill="url(#dotGrad)"/>
+  </g>
+</svg>
