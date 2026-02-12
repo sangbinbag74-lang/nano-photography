@@ -73,6 +73,15 @@ export const en = {
             desc: "High Volume (200 generations)",
         },
         buy_btn: "Purchase",
+        features: {
+            commercial: "Commercial License",
+            high_res: "High-Res Download",
+        },
+        secure_badge: "Secured by Paddle • Global Payments",
+    },
+    common: {
+        back_to_home: "Back to Home",
+        last_updated: "Last updated",
     }
 };
 

@@ -130,8 +130,8 @@ export default function PricingModal({ isOpen, onClose, user }: PricingModalProp
                                 <div
                                     key={idx}
                                     className={`relative flex flex-col p-6 rounded-2xl border transition-all duration-300 ${plan.highlight
-                                            ? "bg-white/5 border-blue-500/50 shadow-lg shadow-blue-900/20 md:scale-105 z-10"
-                                            : "bg-black/40 border-white/10 hover:border-white/20 hover:bg-white/5"
+                                        ? "bg-white/5 border-blue-500/50 shadow-lg shadow-blue-900/20 md:scale-105 z-10"
+                                        : "bg-black/40 border-white/10 hover:border-white/20 hover:bg-white/5"
                                         }`}
                                 >
                                     {plan.highlight && (
@@ -159,11 +159,11 @@ export default function PricingModal({ isOpen, onClose, user }: PricingModalProp
                                         {/* Common Features - could be dynamic later */}
                                         <li className="flex items-start gap-3 text-sm text-white/60 font-light">
                                             <Check className="w-4 h-4 text-white/20 mt-0.5 shrink-0" />
-                                            Commercial License
+                                            {t.pricing.features.commercial}
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-white/60 font-light">
                                             <Check className="w-4 h-4 text-white/20 mt-0.5 shrink-0" />
-                                            High-Res Download
+                                            {t.pricing.features.high_res}
                                         </li>
                                     </ul>
 
@@ -171,8 +171,8 @@ export default function PricingModal({ isOpen, onClose, user }: PricingModalProp
                                         onClick={() => handlePurchase(plan.id)}
                                         disabled={loadingPriceId !== null}
                                         className={`w-full py-3 rounded-xl text-sm font-medium tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${plan.highlight
-                                                ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/30"
-                                                : "bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                            ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/30"
+                                            : "bg-white/5 hover:bg-white/10 text-white border border-white/10"
                                             }`}
                                     >
                                         {loadingPriceId === plan.id ? (
@@ -191,7 +191,7 @@ export default function PricingModal({ isOpen, onClose, user }: PricingModalProp
                 <div className="px-8 pb-8 text-center">
                     <p className="text-white/20 text-xs font-light flex items-center justify-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500/50" />
-                        Secured by Paddle • Global Payments
+                        {t.pricing.secure_badge}
                     </p>
                 </div>
 

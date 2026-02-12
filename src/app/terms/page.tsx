@@ -1,17 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 
 export default function TermsPage() {
+    const { t } = useLanguage();
     return (
         <main className="min-h-screen bg-black text-white px-6 py-20 md:py-32">
             <div className="max-w-3xl mx-auto">
                 <Link href="/" className="text-white/50 hover:text-white mb-8 block transition-colors">
-                    &larr; Back to Home
+                    &larr; {t.common.back_to_home}
                 </Link>
 
                 <h1 className="text-4xl font-light mb-8">Terms of Service</h1>
-                <p className="text-white/50 mb-12">Last updated: February 12, 2026</p>
+                <p className="text-white/50 mb-12">{t.common.last_updated}: February 12, 2026</p>
 
                 <div className="space-y-8 text-white/80 font-light leading-relaxed">
                     <section>

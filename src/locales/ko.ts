@@ -75,5 +75,14 @@ export const ko: Translations = {
             desc: "대량 제작용 (200회 생성)",
         },
         buy_btn: "충전하기",
+        features: {
+            commercial: "상업적 이용 가능",
+            high_res: "고해상도 다운로드",
+        },
+        secure_badge: "Paddle 보안 결제 • 글로벌 페이먼트",
+    },
+    common: {
+        back_to_home: "홈으로 돌아가기",
+        last_updated: "최종 수정일",
     }
 };

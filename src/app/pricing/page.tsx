@@ -120,8 +120,8 @@ export default function PricingPage() {
                             <div
                                 key={idx}
                                 className={`relative flex flex-col p-8 rounded-3xl border transition-all duration-300 ${plan.highlight
-                                        ? "bg-white/5 border-blue-500/50 shadow-2xl shadow-blue-900/20 md:-translate-y-4 z-10"
-                                        : "bg-black/40 border-white/10 hover:border-white/20 hover:bg-white/5"
+                                    ? "bg-white/5 border-blue-500/50 shadow-2xl shadow-blue-900/20 md:-translate-y-4 z-10"
+                                    : "bg-black/40 border-white/10 hover:border-white/20 hover:bg-white/5"
                                     }`}
                             >
                                 {plan.highlight && (
@@ -148,11 +148,11 @@ export default function PricingPage() {
                                     </li>
                                     <li className="flex items-start gap-3 text-sm text-white/70 font-light">
                                         <Check className="w-5 h-5 text-white/20 mt-0.5 shrink-0" />
-                                        Commercial License
+                                        {t.pricing.features.commercial}
                                     </li>
                                     <li className="flex items-start gap-3 text-sm text-white/70 font-light">
                                         <Check className="w-5 h-5 text-white/20 mt-0.5 shrink-0" />
-                                        High-Res Download
+                                        {t.pricing.features.high_res}
                                     </li>
                                 </ul>
 
@@ -160,8 +160,8 @@ export default function PricingPage() {
                                     onClick={() => handlePurchase(plan.id)}
                                     disabled={loadingPriceId !== null}
                                     className={`w-full py-4 rounded-xl text-sm font-medium tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${plan.highlight
-                                            ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/30"
-                                            : "bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                                        ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/30"
+                                        : "bg-white/5 hover:bg-white/10 text-white border border-white/10"
                                         }`}
                                 >
                                     {loadingPriceId === plan.id ? (
