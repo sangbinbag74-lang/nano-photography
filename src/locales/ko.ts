@@ -4,9 +4,9 @@ import { Translations } from "./en";
 export const ko: Translations = {
     hero: {
         badge: "AI V2.0 엔진 가동 중",
-        title_1: "압도적인 퀄리티",
-        title_2: "모든 각도에서.",
-        description: "제품 사진 3-4장을 업로드하세요. AI가 깊이, 질감, 형태를 완벽하게 이해하여 모든 각도에서 일관된 스튜디오 사진을 만들어냅니다.",
+        title_1: "어떤 각도에서도 완벽하게",
+        title_2: "압도적인 퀄리티",
+        description: "제품 사진 3-4장만으로 충분합니다. AI가 제품의 입체적인 형태와 질감을 정교하게 분석하여, 다각도에서 일관된 최상의 퀄리티를 만들어냅니다.",
         login_notice: "생성 기능을 사용하려면 로그인이 필요합니다.",
     },
     uploader: {
