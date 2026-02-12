@@ -12,16 +12,26 @@ if (!admin.apps.length) {
     // Note: In a real Vercel deploy, you must set GOOGLE_PRIVATE_KEY etc.
 
     try {
+        const projectId = process.env.NEXT_PUBLIC_GOOGLE_PROJECT_ID;
+        const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+        const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+        if (!projectId || !clientEmail || !privateKey) {
+            console.error("Missing Firebase Admin credentials");
+            throw new Error("Missing Firebase Admin credentials (PROJECT_ID, CLIENT_EMAIL, or PRIVATE_KEY)");
+        }
+
         admin.initializeApp({
             credential: admin.credential.cert({
-                projectId: process.env.NEXT_PUBLIC_GOOGLE_PROJECT_ID,
-                clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
-                // Replace \n with actual newlines if stored as one line string
-                privateKey: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+                projectId,
+                clientEmail,
+                privateKey,
             }),
         });
     } catch (error) {
         console.error("Firebase Admin initialization error", error);
+        // Do not throw here to avoid crashing the whole import, 
+        // but usages of adminDb will likely fail if init failed.
     }
 }
 
