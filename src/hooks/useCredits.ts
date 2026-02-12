@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
-import { db, auth } from "./firebase"; // Adjust import path
+import { db, auth } from "@/lib/firebase"; // Adjust import path
 import { onAuthStateChanged, User } from "firebase/auth";
 
 export function useCredits() {
