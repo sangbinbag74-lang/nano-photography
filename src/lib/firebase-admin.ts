@@ -12,7 +12,7 @@ if (!admin.apps.length) {
     // Note: In a real Vercel deploy, you must set GOOGLE_PRIVATE_KEY etc.
 
     try {
-        const projectId = process.env.NEXT_PUBLIC_GOOGLE_PROJECT_ID;
+        const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
         const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
         const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
