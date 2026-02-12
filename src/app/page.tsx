@@ -13,6 +13,7 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import Link from "next/link";
 import { History, Sparkles } from "lucide-react";
 import { saveToHistory, uploadImage } from "@/lib/firestore";
+import { useCredits } from "@/hooks/useCredits";
 import { v4 as uuidv4 } from "uuid";
 import { useLanguage } from "@/lib/i18n";
 
@@ -21,6 +22,7 @@ import { Plus } from "lucide-react";
 
 export default function Home() {
   const { t } = useLanguage();
+  const { credits, loading: creditsLoading } = useCredits();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -61,11 +63,20 @@ export default function Home() {
   };
 
   const startAnalysis = async (files: File[]) => {
+    // Client-side credit check
+    if (credits !== null && credits < 4) {
+      alert(t.uploader.limit_alert || "Insufficient credits. Please top up.");
+      setIsPricingOpen(true);
+      return;
+    }
+
     setIsAnalyzing(true);
     setResults([]);
 
     try {
       const formData = new FormData();
+      if (user) formData.append("userId", user.uid); // Pass userId for server-side check
+
       files.forEach(file => {
         formData.append("image", file);
       });
@@ -74,6 +85,12 @@ export default function Home() {
         method: "POST",
         body: formData,
       });
+
+      if (response.status === 402) {
+        alert("Insufficient credits. Please top up.");
+        setIsPricingOpen(true);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error("Failed to process image");
@@ -139,6 +156,17 @@ export default function Home() {
 
           {user && (
             <>
+              {/* Credit Display */}
+              <div
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full cursor-pointer hover:bg-white/10 transition-colors"
+                onClick={() => setIsPricingOpen(true)}
+              >
+                <span className="text-xs text-white/40">CREDITS</span>
+                <span className={`text-sm font-bold ${credits !== null && credits < 4 ? 'text-red-500' : 'text-blue-400'}`}>
+                  {creditsLoading ? "..." : (credits ?? 0)}
+                </span>
+              </div>
+
               <button
                 onClick={() => setIsPricingOpen(true)}
                 className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-full transition-all shadow-lg shadow-blue-900/20 hover:shadow-blue-600/40 hover:-translate-y-0.5"
