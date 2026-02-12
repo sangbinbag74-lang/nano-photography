@@ -50,7 +50,7 @@ export const ko: Translations = {
         empty: "아직 생성된 이미지가 없습니다.",
         prompt: "프롬프트",
         style: "스타일",
-
+        date: "날짜",
     },
     pricing: {
         title: "크레딧 충전",
