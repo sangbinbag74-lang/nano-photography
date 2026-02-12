@@ -1,7 +1,7 @@
 
 import { GoogleAuth } from "google-auth-library";
 
-const GOOGLE_PROJECT_ID = process.env.NEXT_PUBLIC_GOOGLE_PROJECT_ID;
+const GOOGLE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 // Service Account Credentials
 const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"); // Fix newlines if escaped
@@ -19,7 +19,7 @@ export async function generateBackground(
 
     try {
         console.log("Authenticating with Google Cloud...");
-        
+
         const auth = new GoogleAuth({
             credentials: {
                 client_email: GOOGLE_CLIENT_EMAIL,
@@ -43,7 +43,7 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        const modelId = "imagegeneration@006"; 
+        const modelId = "imagegeneration@006";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 

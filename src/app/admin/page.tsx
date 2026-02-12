@@ -71,7 +71,7 @@ export default async function AdminDashboardPage() {
                     <ul className="list-disc list-inside mt-2">
                         <li>GOOGLE_CLIENT_EMAIL</li>
                         <li>GOOGLE_PRIVATE_KEY</li>
-                        <li>NEXT_PUBLIC_GOOGLE_PROJECT_ID</li>
+                        <li>NEXT_PUBLIC_FIREBASE_PROJECT_ID</li>
                     </ul>
                 </div>
             </div>
