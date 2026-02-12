@@ -12,6 +12,8 @@ export const metadata: Metadata = {
 };
 
 
+import { LanguageProvider } from "@/lib/i18n";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,9 +22,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={clsx(inter.className, "bg-black text-white antialiased selection:bg-blue-500 selection:text-white")}>
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );
 }
+
 

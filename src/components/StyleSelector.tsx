@@ -4,6 +4,8 @@
 import { clsx } from "clsx";
 import { Sparkles, ArrowRight } from "lucide-react";
 
+import { useLanguage } from "@/lib/i18n";
+
 export interface StyleOption {
     style: string;
     description: string;
@@ -17,6 +19,7 @@ interface StyleSelectorProps {
 }
 
 export default function StyleSelector({ options, onSelect }: StyleSelectorProps) {
+    const { t } = useLanguage();
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mx-auto pb-20 px-4">
             {options.map((option, index) => (

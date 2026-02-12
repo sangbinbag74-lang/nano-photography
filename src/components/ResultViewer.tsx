@@ -3,6 +3,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { GripVertical, MoveHorizontal } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
 
 interface ResultViewerProps {
     originalImage: string;
@@ -10,6 +11,7 @@ interface ResultViewerProps {
 }
 
 export default function ResultViewer({ originalImage, generatedImage }: ResultViewerProps) {
+    const { t } = useLanguage();
     const [sliderPosition, setSliderPosition] = useState(50);
     const containerRef = useRef<HTMLDivElement>(null);
     const isDragging = useRef(false);
@@ -68,7 +70,7 @@ export default function ResultViewer({ originalImage, generatedImage }: ResultVi
                     {/* Label */}
                     <div className="absolute top-4 right-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest text-blue-400 uppercase shadow-lg">
-                            AI Rendered
+                            {t.result_viewer.ai_label}
                         </div>
                     </div>
                 </div>
@@ -87,7 +89,7 @@ export default function ResultViewer({ originalImage, generatedImage }: ResultVi
                     {/* Label */}
                     <div className="absolute top-4 left-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest text-white/50 uppercase shadow-lg">
-                            Original Source
+                            {t.result_viewer.original_label}
                         </div>
                     </div>
                 </div>
@@ -109,7 +111,7 @@ export default function ResultViewer({ originalImage, generatedImage }: ResultVi
             </div>
 
             <p className="text-center mt-4 text-xs font-medium tracking-widest text-white/20 uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                Drag to Compare
+                {t.result_viewer.drag_compare}
             </p>
         </div>
     );
