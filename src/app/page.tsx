@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,15 +7,17 @@ import ResultViewer from "@/components/ResultViewer";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { fileToBase64 } from "@/lib/utils";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import Link from "next/link";
 import { History, Sparkles } from "lucide-react";
 import { saveToHistory, uploadImage } from "@/lib/firestore";
 import { v4 as uuidv4 } from "uuid";
+import { useLanguage } from "@/lib/i18n";
 
 export default function Home() {
-
+  const { t } = useLanguage();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -34,11 +35,11 @@ export default function Home() {
 
   const handleImagesSelect = async (files: File[]) => {
     if (!user) {
-      alert("로그인이 필요합니다.");
+      alert(t.auth.login_required);
       return;
     }
     if (files.length > 4) {
-      alert("최대 4장까지만 업로드 가능합니다.");
+      alert(t.uploader.limit_alert);
       return;
     }
 
@@ -129,14 +130,15 @@ export default function Home() {
             Nano Photography
           </h1>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           {user && (
             <Link
               href="/gallery"
               className="hidden md:flex items-center gap-2 text-sm font-medium text-white/60 hover:text-white transition-colors"
             >
               <History className="w-4 h-4" />
-              History
+              {t.auth.history}
             </Link>
           )}
           <GoogleLoginButton />
@@ -154,14 +156,14 @@ export default function Home() {
             <div className="text-center mb-16 relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-blue-400 mb-6 backdrop-blur-md">
                 <Sparkles className="w-3 h-3" />
-                <span>AI V2.0 Engine Live</span>
+                <span>{t.hero.badge}</span>
               </div>
               <h2 className="text-5xl md:text-7xl lg:text-8xl font-light tracking-tighter text-white mb-6 leading-[0.9]">
-                Studio Quality <br />
-                <span className="text-gradient font-medium">Every Angle.</span>
+                {t.hero.title_1} <br />
+                <span className="text-gradient font-medium">{t.hero.title_2}</span>
               </h2>
               <p className="text-white/40 text-lg md:text-xl font-light max-w-xl mx-auto leading-relaxed">
-                Upload 3-4 photos. Our AI perceives depth, texture, and form to generate consistency across all perspectives.
+                {t.hero.description}
               </p>
             </div>
 
@@ -182,7 +184,7 @@ export default function Home() {
             {!user && (
               <div className="mt-8 text-center animate-fade-in">
                 <p className="text-white/30 text-sm font-light">
-                  Sign in required to access generation features.
+                  {t.hero.login_notice}
                 </p>
               </div>
             )}
@@ -191,7 +193,7 @@ export default function Home() {
             {results.length > 0 && (
               <div className="w-full max-w-6xl mt-24 animate-slide-up">
                 <div className="flex items-center justify-between mb-8 px-4">
-                  <h3 className="text-2xl font-light tracking-tight text-white">Select Concept</h3>
+                  <h3 className="text-2xl font-light tracking-tight text-white">{t.style_selector.title}</h3>
                   <div className="h-[1px] bg-white/10 flex-1 ml-8" />
                 </div>
 
@@ -223,11 +225,11 @@ export default function Home() {
                 <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/30 transition-all">
                   ←
                 </div>
-                <span className="text-sm font-medium tracking-wide">BACK TO STYLES</span>
+                <span className="text-sm font-medium tracking-wide">{t.result_viewer.back}</span>
               </button>
 
               <div className="flex flex-col items-center">
-                <span className="text-[10px] font-bold tracking-[0.2em] text-blue-500 uppercase mb-1">SELECTED STYLE</span>
+                <span className="text-[10px] font-bold tracking-[0.2em] text-blue-500 uppercase mb-1">{t.result_viewer.selected_style}</span>
                 <h2 className="text-2xl font-light tracking-tight text-white">{selectedResult.style}</h2>
               </div>
 
@@ -246,7 +248,7 @@ export default function Home() {
                       : "text-white/50 hover:text-white hover:bg-white/5"
                       }`}
                   >
-                    ANGLE {idx + 1}
+                    {t.result_viewer.angle} {idx + 1}
                   </button>
                 ))}
               </div>
@@ -268,13 +270,13 @@ export default function Home() {
 
               <div className="flex items-center gap-4">
                 <button className="h-12 px-8 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium tracking-wide rounded-full transition-all shadow-lg shadow-blue-900/50 hover:shadow-blue-600/50 hover:-translate-y-0.5">
-                  Download High-Res
+                  {t.result_viewer.download}
                 </button>
                 <button
                   onClick={handleClear}
                   className="h-12 px-8 bg-white/5 hover:bg-white/10 text-white text-sm font-medium tracking-wide rounded-full border border-white/10 transition-all hover:border-white/20"
                 >
-                  New Project
+                  {t.result_viewer.new_project}
                 </button>
               </div>
             </div>
@@ -285,4 +287,3 @@ export default function Home() {
     </main>
   );
 }
-

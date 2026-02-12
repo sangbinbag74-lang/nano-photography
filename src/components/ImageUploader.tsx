@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useState, useCallback } from "react";
 import { Upload, X, Check, Image as ImageIcon, Plus } from "lucide-react";
 import { clsx } from "clsx";
+import { useLanguage } from "@/lib/i18n";
 
 interface ImageUploaderProps {
     onImagesSelected: (files: File[]) => void;
@@ -16,6 +16,7 @@ export default function ImageUploader({
     selectedImages,
     onClear,
 }: ImageUploaderProps) {
+    const { t } = useLanguage();
     const [isDragging, setIsDragging] = useState(false);
 
     const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -67,7 +68,7 @@ export default function ImageUploader({
                             {/* Context Badge */}
                             <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border border-white/10 text-white/80 text-[10px] font-medium tracking-wider px-2 py-1 rounded-full flex items-center gap-1.5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                                ANGLE 0{idx + 1}
+                                {t.uploader.context_badge} 0{idx + 1}
                             </div>
                         </div>
                     ))}
@@ -85,7 +86,7 @@ export default function ImageUploader({
                             <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300">
                                 <Plus className="w-5 h-5 text-white/50 group-hover:text-white" />
                             </div>
-                            <span className="text-white/40 text-xs font-medium tracking-wider mt-3 group-hover:text-white/70 transition-colors">ADD MORE</span>
+                            <span className="text-white/40 text-xs font-medium tracking-wider mt-3 group-hover:text-white/70 transition-colors">{t.uploader.add_more}</span>
                         </div>
                     )}
                 </div>
@@ -95,7 +96,7 @@ export default function ImageUploader({
                         onClick={onClear}
                         className="px-6 py-2 rounded-full border border-white/10 bg-white/5 text-white/40 hover:text-white hover:bg-red-500/10 hover:border-red-500/30 text-xs font-medium tracking-widest transition-all duration-300 flex items-center gap-2"
                     >
-                        <X className="w-3 h-3" /> RESET SELECTION
+                        <X className="w-3 h-3" /> {t.uploader.reset}
                     </button>
                 </div>
             </div>
@@ -141,10 +142,10 @@ export default function ImageUploader({
 
                 <div className="text-center space-y-2">
                     <p className="text-lg md:text-xl font-light tracking-tight text-white/90">
-                        Drop product photos here
+                        {t.uploader.drop_title}
                     </p>
                     <p className="text-sm text-white/40 font-light">
-                        Upload 3-4 angles for best results
+                        {t.uploader.drop_subtitle}
                     </p>
                 </div>
             </div>
@@ -152,10 +153,9 @@ export default function ImageUploader({
             {/* Bottom Indicator */}
             <div className="absolute bottom-6 flex items-center gap-2 text-[10px] font-medium tracking-widest text-white/20 uppercase group-hover:text-blue-400/80 transition-colors duration-500">
                 <span className="w-1 h-1 rounded-full bg-current" />
-                Drag & Drop Supported
+                {t.uploader.drag_support}
                 <span className="w-1 h-1 rounded-full bg-current" />
             </div>
         </div>
     );
 }
-
