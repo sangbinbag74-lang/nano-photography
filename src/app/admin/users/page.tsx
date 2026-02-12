@@ -1,7 +1,8 @@
-
 import { adminDb } from "@/lib/firebase-admin";
 import { adjustUserCredits } from "../actions";
 import ClientUserTable from "./ClientUserTable";
+
+export const dynamic = 'force-dynamic';
 
 export default async function UsersPage() {
     // Fetch all users

@@ -7,6 +7,7 @@ import { clsx } from "clsx";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://nano-photography.com'),
   title: "Nano Photography - AI Commercial Photo Studio",
   description: "Transform your product photos into professional commercial shots in seconds.",
 };
