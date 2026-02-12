@@ -64,7 +64,7 @@ export default function AdminLayout({
             <aside className="w-64 border-r border-white/10 flex flex-col bg-black/50 backdrop-blur-xl">
                 <div className="p-6 border-b border-white/10">
                     <h1 className="text-xl font-bold tracking-tighter bg-gradient-to-r from-white to-white/50 bg-clip-text text-transparent">
-                        Nano Admin
+                        Admin
                     </h1>
                 </div>
 
