@@ -50,6 +50,29 @@ export const ko: Translations = {
         empty: "아직 생성된 이미지가 없습니다.",
         prompt: "프롬프트",
         style: "스타일",
-        date: "날짜",
-    }
-};
+
+        pricing: {
+            title: "크레딧 충전",
+            subtitle: "원하는 플랜을 선택하세요. 생성 1회당 4 크레딧이 차감됩니다.",
+            starter: {
+                name: "스타터",
+                price: "₩9,900",
+                credits: "60 크레딧",
+                desc: "가볍게 시작하기 (15회 생성)",
+            },
+            pro: {
+                name: "프로",
+                price: "₩29,000",
+                credits: "200 크레딧",
+                desc: "가장 인기있는 플랜 (50회 생성)",
+                badge: "BEST",
+            },
+            business: {
+                name: "비즈니스",
+                price: "₩99,000",
+                credits: "800 크레딧",
+                desc: "대량 제작용 (200회 생성)",
+            },
+            buy_btn: "충전하기",
+        }
+    };

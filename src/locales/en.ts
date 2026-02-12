@@ -49,6 +49,30 @@ export const en = {
         prompt: "Prompt",
         style: "Style",
         date: "Date",
+    },
+    pricing: {
+        title: "Top Up Credits",
+        subtitle: "Select a plan. 1 generation (4 angles) costs 4 credits.",
+        starter: {
+            name: "Starter",
+            price: "$7.50",
+            credits: "60 Credits",
+            desc: "Good for starters (15 generations)",
+        },
+        pro: {
+            name: "Pro",
+            price: "$22.00",
+            credits: "200 Credits",
+            desc: "Most Popular (50 generations)",
+            badge: "BEST",
+        },
+        business: {
+            name: "Business",
+            price: "$75.00",
+            credits: "800 Credits",
+            desc: "High Volume (200 generations)",
+        },
+        buy_btn: "Purchase",
     }
 };
 

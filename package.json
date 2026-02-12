@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@paddle/paddle-js": "^1.6.2",
     "@types/uuid": "^10.0.0",
     "clsx": "^2.1.1",
     "firebase": "^12.9.0",

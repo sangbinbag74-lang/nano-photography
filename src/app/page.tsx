@@ -16,6 +16,9 @@ import { saveToHistory, uploadImage } from "@/lib/firestore";
 import { v4 as uuidv4 } from "uuid";
 import { useLanguage } from "@/lib/i18n";
 
+import PricingModal from "@/components/PricingModal";
+import { Plus } from "lucide-react";
+
 export default function Home() {
   const { t } = useLanguage();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -25,6 +28,7 @@ export default function Home() {
   const [selectedResult, setSelectedResult] = useState<any | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [user, setUser] = useState<User | null>(null);
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -132,14 +136,25 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
+
           {user && (
-            <Link
-              href="/gallery"
-              className="hidden md:flex items-center gap-2 text-sm font-medium text-white/60 hover:text-white transition-colors"
-            >
-              <History className="w-4 h-4" />
-              {t.auth.history}
-            </Link>
+            <>
+              <button
+                onClick={() => setIsPricingOpen(true)}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-full transition-all shadow-lg shadow-blue-900/20 hover:shadow-blue-600/40 hover:-translate-y-0.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                GET CREDITS
+              </button>
+
+              <Link
+                href="/gallery"
+                className="hidden md:flex items-center gap-2 text-sm font-medium text-white/60 hover:text-white transition-colors"
+              >
+                <History className="w-4 h-4" />
+                {t.auth.history}
+              </Link>
+            </>
           )}
           <GoogleLoginButton />
         </div>
@@ -284,6 +299,13 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Pricing Modal */}
+      <PricingModal
+        isOpen={isPricingOpen}
+        onClose={() => setIsPricingOpen(false)}
+        user={user}
+      />
     </main>
   );
 }
