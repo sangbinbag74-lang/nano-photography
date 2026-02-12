@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase"; // Shared firebase auth instance
+import { useLanguage } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 import Link from "next/link";
@@ -46,6 +47,8 @@ export default function AdminLayout({
         return () => unsubscribe();
     }, [router]);
 
+    const { t } = useLanguage();
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -69,11 +72,11 @@ export default function AdminLayout({
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    <NavItem href="/admin" icon={LayoutDashboard} label="Dashboard" />
-                    <NavItem href="/admin/users" icon={Users} label="Users" />
-                    <NavItem href="/admin/gallery" icon={Images} label="Gallery" />
-                    <NavItem href="/admin/transactions" icon={CreditCard} label="Transactions" />
-                    <NavItem href="/admin/settings" icon={Settings} label="Settings" />
+                    <NavItem href="/admin" icon={LayoutDashboard} label={t.admin.sidebar.dashboard} />
+                    <NavItem href="/admin/users" icon={Users} label={t.admin.sidebar.users} />
+                    <NavItem href="/admin/gallery" icon={Images} label={t.admin.sidebar.gallery} />
+                    <NavItem href="/admin/transactions" icon={CreditCard} label={t.admin.sidebar.transactions} />
+                    <NavItem href="/admin/settings" icon={Settings} label={t.admin.sidebar.settings} />
                 </nav>
 
                 <div className="p-4 border-t border-white/10">
@@ -88,6 +91,7 @@ export default function AdminLayout({
                     </div>
                 </div>
             </aside>
+
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto bg-grid-white/[0.02]">
