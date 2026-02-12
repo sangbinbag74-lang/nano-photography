@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { GripVertical } from "lucide-react";
+import { GripVertical, MoveHorizontal } from "lucide-react";
 
 interface ResultViewerProps {
     originalImage: string;
@@ -39,62 +39,78 @@ export default function ResultViewer({ originalImage, generatedImage }: ResultVi
     };
 
     useEffect(() => {
-        document.addEventListener("mouseup", handleMouseUp);
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("touchend", handleMouseUp);
-        document.addEventListener("touchmove", handleTouchMove as any);
-
+        const up = () => isDragging.current = false;
+        document.addEventListener("mouseup", up);
+        document.addEventListener("touchend", up);
         return () => {
-            document.removeEventListener("mouseup", handleMouseUp);
-            document.removeEventListener("mousemove", handleMouseMove);
-            document.removeEventListener("touchend", handleMouseUp);
-            document.removeEventListener("touchmove", handleTouchMove as any);
+            document.removeEventListener("mouseup", up);
+            document.removeEventListener("touchend", up);
         };
     }, []);
 
     return (
         <div
-            ref={containerRef}
-            className="relative w-full max-w-2xl aspect-[3/4] mx-auto rounded-2xl overflow-hidden glass-panel select-none touch-none"
+            className="w-full relative group select-none"
+            onMouseMove={handleMouseMove}
+            onTouchMove={handleTouchMove as any}
         >
-            {/* Generated Image (Background) */}
-            <img
-                src={generatedImage}
-                alt="Generated"
-                className="absolute inset-0 w-full h-full object-cover"
-            />
-
-            {/* Original Image (Foreground, Clipped) */}
             <div
-                className="absolute inset-0 w-full h-full overflow-hidden"
-                style={{ width: `${sliderPosition}%` }}
+                ref={containerRef}
+                className="relative w-full aspect-[3/4] md:aspect-[4/3] rounded-3xl overflow-hidden glass-card shadow-2xl shadow-black/50 border border-white/10"
             >
-                <img
-                    src={originalImage}
-                    alt="Original"
-                    className="absolute top-0 left-0 w-[100vw] max-w-2xl h-full object-cover"
-                />
-            </div>
+                {/* Generated Image (Right/Background) */}
+                <div className="absolute inset-0">
+                    <img
+                        src={generatedImage}
+                        alt="Generated"
+                        className="w-full h-full object-cover"
+                    />
+                    {/* Label */}
+                    <div className="absolute top-4 right-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest text-blue-400 uppercase shadow-lg">
+                            AI Rendered
+                        </div>
+                    </div>
+                </div>
 
-            {/* Slider Handle */}
-            <div
-                className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize flex items-center justify-center group"
-                style={{ left: `${sliderPosition}%` }}
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleMouseDown}
-            >
-                <div className="w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-black group-hover:scale-110 transition-transform">
-                    <GripVertical className="w-5 h-5" />
+                {/* Original Image (Left/Foreground, Clipped) */}
+                <div
+                    className="absolute inset-0 w-full h-full overflow-hidden border-r border-white/20"
+                    style={{ width: `${sliderPosition}%` }}
+                >
+                    <img
+                        src={originalImage}
+                        alt="Original"
+                        className="absolute top-0 left-0 w-full h-full object-cover"
+                        style={{ width: '100vw', maxWidth: 'none' }} // Trick to keep image static while container clips
+                    />
+                    {/* Label */}
+                    <div className="absolute top-4 left-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-widest text-white/50 uppercase shadow-lg">
+                            Original Source
+                        </div>
+                    </div>
+                </div>
+
+                {/* Slider Handle Line */}
+                <div
+                    className="absolute top-0 bottom-0 w-[1px] bg-white/50 cursor-ew-resize z-20"
+                    style={{ left: `${sliderPosition}%` }}
+                >
+                    {/* Handle Button */}
+                    <div
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-xl border border-white/30 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-110 active:scale-95 transition-all duration-300"
+                        onMouseDown={handleMouseDown}
+                        onTouchStart={handleMouseDown}
+                    >
+                        <MoveHorizontal className="w-5 h-5 text-white drop-shadow-md" />
+                    </div>
                 </div>
             </div>
 
-            {/* Labels */}
-            <div className="absolute top-4 left-4 bg-black/50 backdrop-blur px-3 py-1 rounded-full text-xs font-medium text-white pointer-events-none">
-                Original
-            </div>
-            <div className="absolute top-4 right-4 bg-blue-500/50 backdrop-blur px-3 py-1 rounded-full text-xs font-medium text-white pointer-events-none">
-                AI Studio
-            </div>
+            <p className="text-center mt-4 text-xs font-medium tracking-widest text-white/20 uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                Drag to Compare
+            </p>
         </div>
     );
 }

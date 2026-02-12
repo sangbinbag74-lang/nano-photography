@@ -11,7 +11,7 @@ import GoogleLoginButton from "@/components/GoogleLoginButton";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import Link from "next/link";
-import { ArrowLeft, History } from "lucide-react";
+import { History, Sparkles } from "lucide-react";
 import { saveToHistory, uploadImage } from "@/lib/firestore";
 import { v4 as uuidv4 } from "uuid";
 
@@ -20,12 +20,9 @@ export default function Home() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [results, setResults] = useState<any[]>([]); // New structure
+  const [results, setResults] = useState<any[]>([]);
   const [selectedResult, setSelectedResult] = useState<any | null>(null);
-
-  // Track which of the uploaded images we are currently viewing in the ResultViewer
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -40,22 +37,17 @@ export default function Home() {
       alert("로그인이 필요합니다.");
       return;
     }
-    // Limit to 4 images
     if (files.length > 4) {
       alert("최대 4장까지만 업로드 가능합니다.");
       return;
     }
 
-    // setSelectedFiles(files);
     const base64s = await Promise.all(files.map(file => fileToBase64(file)));
     setPreviewUrls(base64s);
-
-    // Auto start analysis
     startAnalysis(files);
   };
 
   const handleClear = () => {
-    // setSelectedFiles([]);
     setPreviewUrls([]);
     setResults([]);
     setSelectedResult(null);
@@ -65,7 +57,7 @@ export default function Home() {
 
   const startAnalysis = async (files: File[]) => {
     setIsAnalyzing(true);
-    setResults([]); // Clear previous results
+    setResults([]);
 
     try {
       const formData = new FormData();
@@ -83,25 +75,15 @@ export default function Home() {
       }
 
       const data = await response.json();
-
-      // Data structure: { originals: string[], results: { style, description, generatedImages: string[] }[] }
       setResults(data.results);
-
-      // Save logic (Simplified for multi-image)
-      // Only save if user generates? Actually we generated already.
-      // Saving ALL is expensive/slow. Let's do lazy saving or save independent of UI?
-      // For MVP Phase 6, let's keep it simple: Save everything.
 
       if (user && data.results.length > 0) {
         const originals = data.originals as string[];
-
-        // 1. Upload Originals
         const originalUrls = await Promise.all(originals.map(async (orig) => {
           const path = `uploads/${user.uid}/${uuidv4()}_original.png`;
           return await uploadImage(orig, path);
         }));
 
-        // 2. Upload and Save ALL generations
         await Promise.all(data.results.map(async (res: any) => {
           await Promise.all(res.generatedImages.map(async (genImg: string, idx: number) => {
             if (genImg.startsWith("data:")) {
@@ -128,83 +110,98 @@ export default function Home() {
     }
   };
 
-
-
   return (
-    <main className="min-h-screen p-4 md:p-8 flex flex-col items-center">
+    <main className="min-h-screen bg-black text-white selection:bg-blue-500 selection:text-white overflow-x-hidden">
+
+      {/* Background Ambience */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px] animate-float" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-900/10 rounded-full blur-[120px] animate-float" style={{ animationDelay: "2s" }} />
+      </div>
+
       {/* Header */}
-      <header className="w-full max-w-6xl flex justify-between items-center mb-12 animate-fade-in">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20">
-            <span className="text-xl font-bold text-white">N</span>
+      <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-6 md:px-12 backdrop-blur-sm bg-black/30 border-b border-white/5 transition-all duration-300">
+        <div className="flex items-center gap-3 group cursor-pointer">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/40 group-hover:shadow-blue-600/60 transition-all duration-500">
+            <span className="text-sm font-bold text-white">N</span>
           </div>
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+          <h1 className="text-lg font-medium tracking-tight text-white/90 group-hover:text-white transition-colors">
             Nano Photography
           </h1>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           {user && (
             <Link
               href="/gallery"
-              className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              className="hidden md:flex items-center gap-2 text-sm font-medium text-white/60 hover:text-white transition-colors"
             >
               <History className="w-4 h-4" />
-              내 갤러리
+              History
             </Link>
           )}
           <GoogleLoginButton />
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="w-full max-w-6xl animate-fade-in">
+      {/* Main Content Area */}
+      <div className="relative pt-32 pb-20 px-4 md:px-0 max-w-7xl mx-auto min-h-screen flex flex-col items-center justify-center">
 
-        {/* State 1: Upload / Analysis */}
+        {/* State 1: Hero & Upload */}
         {!selectedResult && (
-          <div className="flex flex-col items-center max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-6 text-balance bg-gradient-to-br from-white to-gray-500 bg-clip-text text-transparent">
-              Studio quality for every angle.
-            </h2>
-            <p className="text-gray-400 text-center mb-12 max-w-lg">
-              Upload 3-4 photos of your product. Our AI analyzes the full context to consistency across all angles.
-            </p>
+          <div className="w-full flex flex-col items-center animate-fade-in">
 
-            <div className="relative w-full">
-              <ImageUploader
-                onImagesSelected={handleImagesSelect}
-                selectedImages={previewUrls}
-                onClear={handleClear}
-              />
+            {/* Hero Text */}
+            <div className="text-center mb-16 relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-blue-400 mb-6 backdrop-blur-md">
+                <Sparkles className="w-3 h-3" />
+                <span>AI V2.0 Engine Live</span>
+              </div>
+              <h2 className="text-5xl md:text-7xl lg:text-8xl font-light tracking-tighter text-white mb-6 leading-[0.9]">
+                Studio Quality <br />
+                <span className="text-gradient font-medium">Every Angle.</span>
+              </h2>
+              <p className="text-white/40 text-lg md:text-xl font-light max-w-xl mx-auto leading-relaxed">
+                Upload 3-4 photos. Our AI perceives depth, texture, and form to generate consistency across all perspectives.
+              </p>
+            </div>
+
+            {/* Upload Zone */}
+            <div className="w-full max-w-4xl relative z-20">
+              <div className="glass-card rounded-3xl p-2 md:p-3 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-900/10 hover:border-white/20">
+                <ImageUploader
+                  onImagesSelected={handleImagesSelect}
+                  selectedImages={previewUrls}
+                  onClear={handleClear}
+                />
+              </div>
 
               {/* Scanning Overlay */}
               {isAnalyzing && <LoadingOverlay />}
             </div>
 
             {!user && (
-              <div className="mt-6 text-center animate-fade-in">
-                <p className="text-gray-400 bg-white/5 inline-block px-4 py-2 rounded-full text-sm border border-white/10">
-                  🔒 서비스를 이용하려면 위 버튼을 눌러 로그인해주세요.
+              <div className="mt-8 text-center animate-fade-in">
+                <p className="text-white/30 text-sm font-light">
+                  Sign in required to access generation features.
                 </p>
               </div>
             )}
 
-            {/* Style Results Grid */}
+            {/* Style Selector (Only shows after upload/analysis) */}
             {results.length > 0 && (
-              <div className="w-full mt-12 animate-slide-up">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="h-[1px] bg-white/10 flex-1" />
-                  <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Select Style to View All</span>
-                  <div className="h-[1px] bg-white/10 flex-1" />
+              <div className="w-full max-w-6xl mt-24 animate-slide-up">
+                <div className="flex items-center justify-between mb-8 px-4">
+                  <h3 className="text-2xl font-light tracking-tight text-white">Select Concept</h3>
+                  <div className="h-[1px] bg-white/10 flex-1 ml-8" />
                 </div>
-                {/* Note: StyleSelector expects imageURL in options. Pick the first generated image for thumbnail. */}
+
                 <StyleSelector
                   options={results.map(r => ({
                     style: r.style,
                     description: r.description,
-                    imageUrl: r.generatedImages[0] // Preview with the first result
+                    imageUrl: r.generatedImages[0]
                   }))}
                   onSelect={(opt) => {
-                    // Find full result object
                     const fullRes = results.find(r => r.style === opt.style);
                     setSelectedResult(fullRes);
                   }}
@@ -214,58 +211,76 @@ export default function Home() {
           </div>
         )}
 
-        {/* State 2: Result Comparison */}
+        {/* State 2: Result Viewer (Immersive Mode) */}
         {selectedResult && previewUrls.length > 0 && (
-          <div className="w-full animate-fade-in">
-            <div className="flex items-center justify-between mb-8">
+          <div className="w-full h-full flex flex-col items-center animate-fade-in">
+            {/* Top Bar for Result View */}
+            <div className="w-full max-w-7xl flex items-center justify-between mb-8 px-4">
               <button
                 onClick={() => setSelectedResult(null)}
-                className="text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+                className="group flex items-center gap-3 text-white/50 hover:text-white transition-colors"
               >
-                ← Back to styles
+                <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/30 transition-all">
+                  ←
+                </div>
+                <span className="text-sm font-medium tracking-wide">BACK TO STYLES</span>
               </button>
-              <h2 className="text-2xl font-bold">{selectedResult.style}</h2>
-              <div className="w-24" />
+
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-bold tracking-[0.2em] text-blue-500 uppercase mb-1">SELECTED STYLE</span>
+                <h2 className="text-2xl font-light tracking-tight text-white">{selectedResult.style}</h2>
+              </div>
+
+              <div className="w-[120px]" /> {/* Spacer for centering */}
             </div>
 
-            {/* Image Switcher (Tabs) */}
-            <div className="flex justify-center gap-2 mb-6">
-              {previewUrls.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImageIndex(idx)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeImageIndex === idx
-                      ? "bg-blue-600 text-white"
-                      : "bg-white/10 text-gray-400 hover:bg-white/20"
-                    }`}
-                >
-                  Angle {idx + 1}
-                </button>
-              ))}
+            {/* Angle Switcher (Tabs) */}
+            <div className="flex justify-center gap-3 mb-12">
+              <div className="p-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex gap-1">
+                {previewUrls.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`px-6 py-2 rounded-full text-xs font-medium tracking-wide transition-all duration-300 ${activeImageIndex === idx
+                      ? "bg-white text-black shadow-lg"
+                      : "text-white/50 hover:text-white hover:bg-white/5"
+                      }`}
+                  >
+                    ANGLE {idx + 1}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <ResultViewer
-              originalImage={previewUrls[activeImageIndex]}
-              generatedImage={selectedResult.generatedImages[activeImageIndex]}
-            />
+            {/* Main Viewer */}
+            <div className="w-full max-w-6xl px-4 mb-8">
+              <ResultViewer
+                originalImage={previewUrls[activeImageIndex]}
+                generatedImage={selectedResult.generatedImages[activeImageIndex]}
+              />
+            </div>
 
-            <div className="mt-8 text-center max-w-2xl mx-auto">
-              <p className="text-gray-400 mb-6">{selectedResult.description}</p>
-              <div className="flex items-center justify-center gap-4">
-                <button className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-gray-200 transition-colors">
-                  Download This Angle
+            {/* Actions */}
+            <div className="flex flex-col items-center gap-6 mt-4 pb-20">
+              <p className="text-white/40 text-sm font-light max-w-xl text-center leading-relaxed">
+                {selectedResult.description}
+              </p>
+
+              <div className="flex items-center gap-4">
+                <button className="h-12 px-8 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium tracking-wide rounded-full transition-all shadow-lg shadow-blue-900/50 hover:shadow-blue-600/50 hover:-translate-y-0.5">
+                  Download High-Res
                 </button>
                 <button
                   onClick={handleClear}
-                  className="px-8 py-3 bg-white/10 text-white font-medium rounded-full hover:bg-white/20 transition-colors"
+                  className="h-12 px-8 bg-white/5 hover:bg-white/10 text-white text-sm font-medium tracking-wide rounded-full border border-white/10 transition-all hover:border-white/20"
                 >
                   New Project
                 </button>
               </div>
             </div>
+
           </div>
         )}
-
       </div>
     </main>
   );
