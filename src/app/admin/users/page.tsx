@@ -25,14 +25,6 @@ export default async function UsersPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold">User Management</h2>
-                    <p className="text-white/60">Manage users and credits.</p>
-                </div>
-                {/* Search input could act as a filter trigger */}
-            </div>
-
             <ClientUserTable initialUsers={JSON.parse(JSON.stringify(users))} />
         </div>
     );

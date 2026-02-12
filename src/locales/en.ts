@@ -79,6 +79,35 @@ export const en = {
         },
         secure_badge: "Secured by Paddle • Global Payments",
     },
+    admin: {
+        dashboard: "Dashboard",
+        users: "User Management",
+        users_desc: "Manage users and credits.",
+        gallery: "Gallery Moderation",
+        gallery_desc: "Review and delete generated images.",
+        transactions: "Transaction History",
+        transactions_desc: "View recent payments.",
+        settings: "System Settings",
+        settings_desc: "Configure maintenance mode and banners.",
+        table: {
+            email: "Email",
+            credits: "Credits",
+            created: "Joined",
+            last_active: "Last Active",
+            status: "Status",
+            actions: "Actions",
+        },
+        actions: {
+            add_credits: "Add Credits",
+            ban: "Ban User",
+            delete: "Delete",
+            save: "Save Changes",
+        },
+        status: {
+            active: "Active",
+            banned: "Banned",
+        }
+    },
     common: {
         back_to_home: "Back to Home",
         last_updated: "Last updated",

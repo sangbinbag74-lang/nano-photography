@@ -81,6 +81,35 @@ export const ko: Translations = {
         },
         secure_badge: "Paddle 보안 결제 • 글로벌 페이먼트",
     },
+    admin: {
+        dashboard: "대시보드",
+        users: "사용자 관리",
+        users_desc: "사용자 및 크레딧을 관리합니다.",
+        gallery: "갤러리 관리",
+        gallery_desc: "생성된 이미지를 검토하고 관리합니다.",
+        transactions: "결제 내역",
+        transactions_desc: "최근 결제 내역을 확인합니다.",
+        settings: "시스템 설정",
+        settings_desc: "유지보수 모드 및 배너를 설정합니다.",
+        table: {
+            email: "이메일",
+            credits: "크레딧",
+            created: "가입일",
+            last_active: "최근 활동",
+            status: "상태",
+            actions: "관리",
+        },
+        actions: {
+            add_credits: "크레딧 추가",
+            ban: "차단하기",
+            delete: "삭제",
+            save: "저장하기",
+        },
+        status: {
+            active: "활동 중",
+            banned: "차단됨",
+        }
+    },
     common: {
         back_to_home: "홈으로 돌아가기",
         last_updated: "최종 수정일",

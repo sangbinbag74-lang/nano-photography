@@ -3,6 +3,7 @@
 
 import { signInWithPopup, GoogleAuthProvider, signOut, User } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
+import { saveUser } from "@/lib/firestore";
 import { useState, useEffect } from "react";
 import { LogIn, LogOut, User as UserIcon } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
@@ -20,7 +21,10 @@ export default function GoogleLoginButton() {
 
     const handleLogin = async () => {
         try {
-            await signInWithPopup(auth, googleProvider);
+            const result = await signInWithPopup(auth, googleProvider);
+            if (result.user) {
+                await saveUser(result.user);
+            }
         } catch (error: any) {
             console.error("Login failed", error);
             const errorMessage = error?.message || "Unknown error";

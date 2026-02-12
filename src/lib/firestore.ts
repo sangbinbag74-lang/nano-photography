@@ -1,7 +1,7 @@
 
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
-import { collection, addDoc, query, where, orderBy, getDocs, Timestamp } from "firebase/firestore";
+import { collection, addDoc, query, where, orderBy, getDocs, Timestamp, doc, setDoc, getDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 
 export async function uploadImage(base64: string, path: string): Promise<string> {
@@ -63,5 +63,34 @@ export async function getUserHistory(userId: string): Promise<HistoryItem[]> {
         console.error("Error getting documents: ", e);
         // If index is missing, it might throw. Handle gracefully or log.
         return [];
+    }
+}
+
+export async function saveUser(user: { uid: string; email: string | null; displayName: string | null; photoURL: string | null }) {
+    try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+            await setDoc(userRef, {
+                uid: user.uid,
+                email: user.email,
+                displayName: user.displayName,
+                photoURL: user.photoURL,
+                credits: 5, // Default credits
+                createdAt: Timestamp.now(),
+                lastLogin: Timestamp.now(),
+                status: "active",
+                roles: ["user"]
+            });
+            console.log("User created in Firestore");
+        } else {
+            // Update last login
+            await setDoc(userRef, {
+                lastLogin: Timestamp.now()
+            }, { merge: true });
+        }
+    } catch (e) {
+        console.error("Error saving user: ", e);
     }
 }
