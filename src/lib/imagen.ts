@@ -104,13 +104,10 @@ export async function generateBackground(
         console.error("Failed to generate background:", error);
         throw new Error(`Image generation failed: ${error.message || error}`);
     }
-}
-
-const response = await fetch(endpoint, {
     method: "POST",
-    headers: {
+        headers: {
         "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json; charset=utf-8",
+            "Content-Type": "application/json; charset=utf-8",
     },
     body: JSON.stringify(payload)
 });
