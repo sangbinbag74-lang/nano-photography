@@ -43,12 +43,10 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Correct Logic:
-        // 1. Model: capability-001 (Correct).
-        // 2. Image Structure: FLATTENED (Proven correct by Step 1274 'Invalid editConfig' error, meaning image was parsed).
-        //    (Nested structure caused 'Image should have either uri' error in Step 1364).
-        // 3. Config: EDIT_MODE_DEFAULT.
-        // 4. Fix: Remove 'aspectRatio' to prevent conflict with base image dimensions during editing.
+        // Strategy: Capability-001 + Flattened Ref + BGSWAP
+        // 1. Flattened Structure: PROVEN to parse (step 1274).
+        // 2. BGSWAP Mode: Likely supports auto-segmentation (no mask required).
+        //    'EDIT_MODE_DEFAULT' failed likely due to missing mask.
         const modelId = "imagen-3.0-capability-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
@@ -62,7 +60,7 @@ export async function generateBackground(
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
                             referenceImage: {
-                                // FLATTENED Structure (Direct bytes) - This is what the parser accepted in Step 1271.
+                                // Flattened structure (Valid)
                                 bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
                                 mimeType: "image/png"
                             }
@@ -72,10 +70,9 @@ export async function generateBackground(
             ],
             parameters: {
                 sampleCount: 1,
-                // Removed aspectRatio to rely on Base Image dimensions and avoid config conflict.
                 editConfig: {
                     baseImageReferenceId: 1,
-                    editMode: "EDIT_MODE_DEFAULT"
+                    editMode: "EDIT_MODE_BGSWAP" // Attempting BGSWAP to rely on auto-masking
                 }
             }
         };
