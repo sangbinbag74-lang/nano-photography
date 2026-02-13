@@ -43,33 +43,56 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Fix: Dynamic MimeType + Generate-001
-        // The root cause of 'Invalid Argument' is likely MimeType mismatch (Hardcoded PNG vs Input JPEG).
-        // 1. Extract real MimeType from data URI.
-        // 2. Use 'imagen-3.0-generate-001' which uses the standard 'image' field (not referenceImages).
-        // 3. Remove 'aspectRatio' to respect input dimensions.
+        // The Ultimate Fix: Capability Model + Dynamic Mime + Synthetic Mask
+        // 1. Model: capability-001 (generate-001 is text-only -> 500 Error).
+        // 2. MimeType: Dynamic (Hardcoded PNG caused 'Invalid Argument' for JPEGs).
+        // 3. Structure: Flattened (Nested caused errors in capability model).
+        // 4. Mask: Synthetic White 1x1 (Required for EDIT_MODE_DEFAULT to work without error).
 
         const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
-        const mimeType = matches ? matches[1] : "image/png";
+        const mimeType = matches ? matches[1] : "image/png"; // Fallback if missing
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-        const modelId = "imagen-3.0-generate-001";
+        const modelId = "imagen-3.0-capability-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
+
+        // 1x1 White PNG Base64 (Standard "Select All" mask for variation)
+        const WHITE_MASK_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
         const payload = {
             instances: [
                 {
                     prompt: prompt,
-                    image: {
-                        bytesBase64Encoded: cleanBase64,
-                        mimeType: mimeType
-                    }
+                    referenceImages: [
+                        {
+                            referenceType: "REFERENCE_TYPE_RAW",
+                            referenceId: 1,
+                            referenceImage: {
+                                // Flattened structure (Proven Correct for capability-001)
+                                bytesBase64Encoded: cleanBase64,
+                                mimeType: mimeType // Dynamic MimeType
+                            }
+                        },
+                        {
+                            referenceType: "REFERENCE_TYPE_MASK",
+                            referenceId: 2,
+                            referenceImage: {
+                                // Synthetic Mask (Always PNG)
+                                bytesBase64Encoded: WHITE_MASK_BASE64,
+                                mimeType: "image/png"
+                            }
+                        }
+                    ]
                 }
             ],
             parameters: {
                 sampleCount: 1,
-                // Remove aspectRatio to avoid conflict with input image
-                negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
+                // No aspectRatio (Avoid conflict with Base Image)
+                editConfig: {
+                    baseImageReferenceId: 1,
+                    maskReferenceId: 2,
+                    editMode: "EDIT_MODE_DEFAULT"
+                }
             }
         };
 
