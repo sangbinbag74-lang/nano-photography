@@ -69,9 +69,12 @@ export async function POST(req: NextRequest) {
 
         // --- Logic Continues ---
 
-        // 1. Convert ALL to Base64
+        // 1. Convert ALL to Base64 (Server-side compatible)
         console.log(`Processing ${files.length} images...`);
-        const originalsBase64 = await Promise.all(files.map(file => fileToBase64(file)));
+        const originalsBase64 = await Promise.all(files.map(async (file) => {
+            const buffer = await file.arrayBuffer();
+            return `data:${file.type};base64,${Buffer.from(buffer).toString("base64")}`;
+        }));
 
         // 2. Analyze with Gemini (Get 4 prompts using ALL images as context)
         console.log("Analyzing images with Gemini...");
