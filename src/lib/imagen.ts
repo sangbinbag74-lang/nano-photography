@@ -51,23 +51,33 @@ export async function generateBackground(
         // 3. Model: capability-001 (Correct model).
         // 4. MimeType: Dynamic (Correct data format).
 
-        const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
-        const mimeType = matches ? matches[1] : "image/png";
-        const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-        const imageBuffer = Buffer.from(cleanBase64, "base64");
+        // Final Strategy: Universal PNG Conversion
+        // The persistence of 'Invalid Argument' suggests a format mismatch we can't see (e.g., progressive JPEG, color profile).
+        // Solution: Use 'sharp' to standardise EVERYTHING to vanilla PNGs.
+        // 1. Convert Input -> PNG Buffer.
+        // 2. Create Mask -> PNG Buffer (Channels: 3, White).
+        // 3. Send both as 'image/png'.
 
-        // Generate Dynamic White Mask matching input dimensions
-        // This is the ONLY way to satisfy the strict dimension requirement of capability-001.
-        const metadata = await sharp(imageBuffer).metadata();
+        const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+        const inputBuffer = Buffer.from(cleanBase64, "base64");
+
+        const sharpImage = sharp(inputBuffer);
+        const metadata = await sharpImage.metadata();
         const width = metadata.width || 1024;
         const height = metadata.height || 1024;
 
+        // 1. Force Input to Standard PNG
+        const processedInputBuffer = await sharpImage.png().toBuffer();
+        const processedInputBase64 = processedInputBuffer.toString("base64");
+
+        // 2. Generate White Mask (RGB 3-Channels)
+        // Note: Vertex AI editing often prefers a mask where White = Edit Area.
         const maskBuffer = await sharp({
             create: {
                 width: width,
                 height: height,
-                channels: 3, // RGB (3 channels) - Supported by Sharp types and valid for Mask
-                background: { r: 255, g: 255, b: 255 } // Solid White
+                channels: 3,
+                background: { r: 255, g: 255, b: 255 }
             }
         })
             .png()
@@ -87,8 +97,8 @@ export async function generateBackground(
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
                             referenceImage: {
-                                bytesBase64Encoded: cleanBase64,
-                                mimeType: mimeType
+                                bytesBase64Encoded: processedInputBase64,
+                                mimeType: "image/png" // Now guaranteed PNG
                             }
                         },
                         {
@@ -96,7 +106,7 @@ export async function generateBackground(
                             referenceId: 2,
                             referenceImage: {
                                 bytesBase64Encoded: generatedMaskBase64,
-                                mimeType: "image/png" // Mask is always PNG
+                                mimeType: "image/png" // Guaranteed PNG
                             }
                         }
                     ]
