@@ -51,10 +51,11 @@ export async function generateBackground(
         // 3. Model: capability-001 (Correct model).
         // 4. MimeType: Dynamic (Correct data format).
 
-        // Final Strategy: Create RGB -> Convert to Grayscale
-        // 1. Sharp ERRORs if we try to 'create' 1-channel directly (requires 3-4).
-        // 2. Vertex ERRORs if we send 3-channel RGB (Invalid Argument).
-        // 3. Solution: Create 3-Channel White -> Convert to .grayscale() -> Export PNG.
+        // Final Strategy: Switch to 'generate-001' + Subject Reference
+        // 1. 'capability-001' with Masks is failing repeatedly (Invalid Argument).
+        // 2. 'capability-001' BGSWAP failed config.
+        // 3. Solution: Use 'generate-001' which supports "Subject Reference" for background generation.
+        //    This avoids Masks/EditConfig entirely.
 
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
         const inputBuffer = Buffer.from(cleanBase64, "base64");
@@ -69,27 +70,9 @@ export async function generateBackground(
 
         const processedInputBase64 = processedInputBuffer.toString("base64");
 
-        // Get dimensions of the RESIZED image to match mask
-        const processedMetadata = await sharp(processedInputBuffer).metadata();
-        const width = processedMetadata.width || 1024;
-        const height = processedMetadata.height || 1024;
+        // NO Mask required for 'generate-001' subject reference
 
-        // 2. Generate Mask: Create RGB (valid for Sharp) -> Grayscale (valid for Vertex)
-        const maskBuffer = await sharp({
-            create: {
-                width: width,
-                height: height,
-                channels: 3,
-                background: { r: 255, g: 255, b: 255 }
-            }
-        })
-            .grayscale() // Force to 1-channel (luminance)
-            .png() // Export as 1-channel PNG
-            .toBuffer();
-
-        const generatedMaskBase64 = maskBuffer.toString("base64");
-
-        const modelId = "imagen-3.0-capability-001";
+        const modelId = "imagen-3.0-generate-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
         const payload = {
@@ -98,18 +81,10 @@ export async function generateBackground(
                     prompt: prompt,
                     referenceImages: [
                         {
-                            referenceType: "REFERENCE_TYPE_RAW",
+                            referenceType: "REFERENCE_TYPE_SUBJECT", // Preserves subject, changes background
                             referenceId: 1,
                             referenceImage: {
                                 bytesBase64Encoded: processedInputBase64,
-                                mimeType: "image/png"
-                            }
-                        },
-                        {
-                            referenceType: "REFERENCE_TYPE_MASK",
-                            referenceId: 2,
-                            referenceImage: {
-                                bytesBase64Encoded: generatedMaskBase64,
                                 mimeType: "image/png"
                             }
                         }
@@ -118,11 +93,7 @@ export async function generateBackground(
             ],
             parameters: {
                 sampleCount: 1,
-                editConfig: {
-                    baseImageReferenceId: 1,
-                    maskReferenceId: 2,
-                    editMode: "EDIT_MODE_DEFAULT"
-                },
+                // No editConfig needed for generate-001
                 negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
