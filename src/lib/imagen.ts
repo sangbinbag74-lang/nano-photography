@@ -51,39 +51,27 @@ export async function generateBackground(
         // 3. Model: capability-001 (Correct model).
         // 4. MimeType: Dynamic (Correct data format).
 
-        // Final Strategy: Universal PNG Conversion
-        // The persistence of 'Invalid Argument' suggests a format mismatch we can't see (e.g., progressive JPEG, color profile).
-        // Solution: Use 'sharp' to standardise EVERYTHING to vanilla PNGs.
-        // 1. Convert Input -> PNG Buffer.
-        // 2. Create Mask -> PNG Buffer (Channels: 3, White).
-        // 3. Send both as 'image/png'.
+        // Final Strategy: Resize + BGSWAP (No Mask)
+        // 1. Resize: "Invalid Argument" can be caused by images > 1024px or odd aspect ratios.
+        //    We resize to max 1024x1024 (fit: inside) to satisfy API limits.
+        // 2. Mode: EDIT_MODE_BGSWAP. This uses Auto-Segmentation.
+        //    we REMOVE the mask entirely to avoid "Invalid Argument" on mask format.
+        // 3. Format: Force PNG.
 
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
         const inputBuffer = Buffer.from(cleanBase64, "base64");
 
         const sharpImage = sharp(inputBuffer);
-        const metadata = await sharpImage.metadata();
-        const width = metadata.width || 1024;
-        const height = metadata.height || 1024;
 
-        // 1. Force Input to Standard PNG
-        const processedInputBuffer = await sharpImage.png().toBuffer();
-        const processedInputBase64 = processedInputBuffer.toString("base64");
-
-        // 2. Generate White Mask (RGB 3-Channels)
-        // Note: Vertex AI editing often prefers a mask where White = Edit Area.
-        const maskBuffer = await sharp({
-            create: {
-                width: width,
-                height: height,
-                channels: 3,
-                background: { r: 255, g: 255, b: 255 }
-            }
-        })
+        // Resize to max 1024px on longest side, keeping aspect ratio
+        const processedInputBuffer = await sharpImage
+            .resize({ width: 1024, height: 1024, fit: "inside" })
             .png()
             .toBuffer();
 
-        const generatedMaskBase64 = maskBuffer.toString("base64");
+        const processedInputBase64 = processedInputBuffer.toString("base64");
+
+        // NO MASK GENERATION NEEDED for BGSWAP
 
         const modelId = "imagen-3.0-capability-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
@@ -98,17 +86,10 @@ export async function generateBackground(
                             referenceId: 1,
                             referenceImage: {
                                 bytesBase64Encoded: processedInputBase64,
-                                mimeType: "image/png" // Now guaranteed PNG
-                            }
-                        },
-                        {
-                            referenceType: "REFERENCE_TYPE_MASK",
-                            referenceId: 2,
-                            referenceImage: {
-                                bytesBase64Encoded: generatedMaskBase64,
-                                mimeType: "image/png" // Guaranteed PNG
+                                mimeType: "image/png"
                             }
                         }
+                        // Mask removed
                     ]
                 }
             ],
@@ -116,8 +97,8 @@ export async function generateBackground(
                 sampleCount: 1,
                 editConfig: {
                     baseImageReferenceId: 1,
-                    maskReferenceId: 2,
-                    editMode: "EDIT_MODE_DEFAULT"
+                    // maskReferenceId removed
+                    editMode: "EDIT_MODE_BGSWAP"
                 },
                 negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
