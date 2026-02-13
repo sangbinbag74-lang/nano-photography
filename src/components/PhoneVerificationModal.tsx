@@ -98,121 +98,127 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 shadow-2xl relative">
-                <div id="recaptcha-container" className="invisible absolute"></div>
+        <div className="fixed inset-0 z-[9999] overflow-y-auto">
+            {/* Backdrop */}
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
-                        {step === "input" ? <Phone className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-white">
-                            {step === "input" ? t.auth.phone_verification.title_input : t.auth.phone_verification.title_verify}
-                        </h3>
-                        <p className="text-sm text-white/50">
-                            {step === "input"
-                                ? t.auth.phone_verification.desc_input
-                                : `${t.auth.phone_verification.desc_verify} ${selectedCountry.dial_code} ${phoneNumber}`}
-                        </p>
-                    </div>
-                </div>
+            {/* Modal Positioning Wrapper */}
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+                <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-[#1a1a1a] border border-white/10 p-6 text-left shadow-2xl transition-all">
+                    <div id="recaptcha-container" className="invisible absolute"></div>
 
-                {error && (
-                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                        {error}
-                    </div>
-                )}
-
-                {step === "input" ? (
-                    <form onSubmit={handleSendCode} className="space-y-4">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                            {step === "input" ? <Phone className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                        </div>
                         <div>
-                            <label className="block text-sm font-medium text-white/70 mb-1">
-                                {t.auth.phone_verification.label_phone}
-                            </label>
-                            <div className="flex gap-2">
-                                <div className="relative w-[140px]">
-                                    <select
-                                        value={selectedCountry.code}
-                                        onChange={(e) => setSelectedCountry(countries.find(c => c.code === e.target.value) || countries[0])}
-                                        className="w-full appearance-none bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors pr-8 cursor-pointer text-sm"
-                                    >
-                                        {countries.map(country => (
-                                            <option key={country.code} value={country.code} className="bg-gray-900 text-white">
-                                                {country.flag} {country.dial_code}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/50 text-xs">
-                                        ▼
+                            <h3 className="text-xl font-bold text-white">
+                                {step === "input" ? t.auth.phone_verification.title_input : t.auth.phone_verification.title_verify}
+                            </h3>
+                            <p className="text-sm text-white/50">
+                                {step === "input"
+                                    ? t.auth.phone_verification.desc_input
+                                    : `${t.auth.phone_verification.desc_verify} ${selectedCountry.dial_code} ${phoneNumber}`}
+                            </p>
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+                            {error}
+                        </div>
+                    )}
+
+                    {step === "input" ? (
+                        <form onSubmit={handleSendCode} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-white/70 mb-1">
+                                    {t.auth.phone_verification.label_phone}
+                                </label>
+                                <div className="flex gap-2">
+                                    <div className="relative w-[140px]">
+                                        <select
+                                            value={selectedCountry.code}
+                                            onChange={(e) => setSelectedCountry(countries.find(c => c.code === e.target.value) || countries[0])}
+                                            className="w-full appearance-none bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors pr-8 cursor-pointer text-sm"
+                                        >
+                                            {countries.map(country => (
+                                                <option key={country.code} value={country.code} className="bg-gray-900 text-white">
+                                                    {country.flag} {country.dial_code}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/50 text-xs">
+                                            ▼
+                                        </div>
                                     </div>
+                                    <input
+                                        type="tel"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                        placeholder="10-1234-5678"
+                                        className="flex-1 bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-white/20"
+                                        required
+                                    />
                                 </div>
+                                <p className="mt-1 text-xs text-white/30">
+                                    {selectedCountry.name} ({selectedCountry.code}) selected
+                                </p>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={onClose}
+                                    className="flex-1 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 font-medium transition-colors"
+                                >
+                                    {t.auth.phone_verification.btn_cancel}
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading || !phoneNumber}
+                                    className="flex-1 px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {t.auth.phone_verification.btn_send}
+                                </button>
+                            </div>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleVerifyCode} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-white/70 mb-1">
+                                    {t.auth.phone_verification.label_code}
+                                </label>
                                 <input
-                                    type="tel"
-                                    value={phoneNumber}
-                                    onChange={(e) => setPhoneNumber(e.target.value)}
-                                    placeholder="10-1234-5678"
-                                    className="flex-1 bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-white/20"
+                                    type="text"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value)}
+                                    placeholder="123456"
+                                    maxLength={6}
+                                    className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white text-center text-2xl tracking-widest focus:outline-none focus:border-white/30 transition-colors"
                                     required
                                 />
                             </div>
-                            <p className="mt-1 text-xs text-white/30">
-                                {selectedCountry.name} ({selectedCountry.code}) selected
-                            </p>
-                        </div>
-                        <div className="flex gap-3 pt-2">
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 font-medium transition-colors"
-                            >
-                                {t.auth.phone_verification.btn_cancel}
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={isLoading || !phoneNumber}
-                                className="flex-1 px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                                {t.auth.phone_verification.btn_send}
-                            </button>
-                        </div>
-                    </form>
-                ) : (
-                    <form onSubmit={handleVerifyCode} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-white/70 mb-1">
-                                {t.auth.phone_verification.label_code}
-                            </label>
-                            <input
-                                type="text"
-                                value={verificationCode}
-                                onChange={(e) => setVerificationCode(e.target.value)}
-                                placeholder="123456"
-                                maxLength={6}
-                                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white text-center text-2xl tracking-widest focus:outline-none focus:border-white/30 transition-colors"
-                                required
-                            />
-                        </div>
-                        <div className="flex gap-3 pt-2">
-                            <button
-                                type="button"
-                                onClick={() => setStep("input")}
-                                className="flex-1 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 font-medium transition-colors"
-                            >
-                                {t.auth.phone_verification.btn_change}
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={isLoading || verificationCode.length !== 6}
-                                className="flex-1 px-4 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                                {t.auth.phone_verification.btn_verify}
-                            </button>
-                        </div>
-                    </form>
-                )}
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setStep("input")}
+                                    className="flex-1 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 font-medium transition-colors"
+                                >
+                                    {t.auth.phone_verification.btn_change}
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading || verificationCode.length !== 6}
+                                    className="flex-1 px-4 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {t.auth.phone_verification.btn_verify}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
             </div>
         </div>
     );
