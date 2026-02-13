@@ -43,18 +43,19 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Corrective Strategy: Generate-001 + Style Reference
-        // 1. Model: imagen-3.0-generate-001 (The correct model for Text-to-Image with References).
-        //    (capability-001 is for Editing/Inpainting and insists on Masks).
-        // 2. MimeType: Dynamic (Crucial fix for JPEG inputs).
-        // 3. Structure: Nested 'referenceImage.image' (Required for generate-001).
-        // 4. Type: REFERENCE_TYPE_STYLE (Safe variation mode).
+        // Final Strategy: Capability-001 + BGSWAP + Dynamic MimeType
+        // 1. Model: capability-001 (Alive).
+        // 2. MimeType: Dynamic (Fixes 'Invalid Argument' mismatch).
+        // 3. Mode: EDIT_MODE_BGSWAP (Background Swap).
+        //    (Previous BGSWAP attempt failed because MimeType was wrong).
+        //    (BGSWAP auto-segments, so NO MASK is needed).
+        // 4. Structure: Flattened (Correct for capability-001).
 
         const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
         const mimeType = matches ? matches[1] : "image/png";
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-        const modelId = "imagen-3.0-generate-001";
+        const modelId = "imagen-3.0-capability-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
         const payload = {
@@ -63,13 +64,12 @@ export async function generateBackground(
                     prompt: prompt,
                     referenceImages: [
                         {
-                            referenceType: "REFERENCE_TYPE_STYLE",
+                            referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
                             referenceImage: {
-                                image: {
-                                    bytesBase64Encoded: cleanBase64,
-                                    mimeType: mimeType
-                                }
+                                // Flattened structure
+                                bytesBase64Encoded: cleanBase64,
+                                mimeType: mimeType
                             }
                         }
                     ]
@@ -77,8 +77,10 @@ export async function generateBackground(
             ],
             parameters: {
                 sampleCount: 1,
-                // generate-001 parameters (no editConfig)
-                negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
+                editConfig: {
+                    baseImageReferenceId: 1,
+                    editMode: "EDIT_MODE_BGSWAP"
+                }
             }
         };
 
