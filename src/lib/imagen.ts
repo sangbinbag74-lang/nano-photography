@@ -61,10 +61,7 @@ export async function generateBackground(
                             referenceImage: {
                                 image: {
                                     bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                    // mimeType is optional in some versions but good practice. 
-                                    // The error "Image should have either uri or image bytes" usually means
-                                    // it couldn't find 'bytesBase64Encoded' at the expected path.
-                                    // Path: referenceImages -> referenceImage -> image -> bytesBase64Encoded
+                                    mimeType: "image/png"
                                 }
                             }
                         }
@@ -74,7 +71,8 @@ export async function generateBackground(
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // editConfig is optional.
+                // editConfig is optional, often not needed for raw variation unless specific mode is required.
+                // Keeping it clean to avoid schema validation errors for unknown fields.
             }
         };
 
@@ -106,4 +104,34 @@ export async function generateBackground(
         console.error("Failed to generate background:", error);
         throw new Error(`Image generation failed: ${error.message || error}`);
     }
+}
+
+const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json; charset=utf-8",
+    },
+    body: JSON.stringify(payload)
+});
+
+if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Imagen API Error:", errorText);
+    throw new Error(`Imagen API Failed: ${response.status} - ${errorText}`);
+}
+
+const data = await response.json();
+const generatedBase64 = data.predictions?.[0]?.bytesBase64Encoded;
+
+if (generatedBase64) {
+    return `data:image/png;base64,${generatedBase64}`;
+}
+
+throw new Error("No image generated");
+
+    } catch (error: any) {
+    console.error("Failed to generate background:", error);
+    throw new Error(`Image generation failed: ${error.message || error}`);
+}
 }
