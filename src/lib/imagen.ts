@@ -104,4 +104,5 @@ export async function generateBackground(
         console.error("Failed to generate background:", error);
         throw new Error(`Image generation failed: ${error.message || error}`);
     }
+}
 
