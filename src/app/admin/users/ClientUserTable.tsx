@@ -10,25 +10,48 @@ import { useLanguage } from "@/lib/i18n";
 export default function ClientUserTable({ initialUsers }: { initialUsers: any[] }) {
     const { t } = useLanguage();
     const [users, setUsers] = useState(initialUsers);
-    const [selectedUser, setSelectedUser] = useState<any | null>(null);
-    const [creditAmount, setCreditAmount] = useState(0);
 
-    const handleCreditAdjustment = async (userId: string, amount: number) => {
-        if (!confirm(`Adjust credits by ${amount}?`)) return;
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [creditAmount, setCreditAmount] = useState<string>("");
+    const [creditReason, setCreditReason] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const openCreditModal = (userId: string) => {
+        setSelectedUserId(userId);
+        setCreditAmount("");
+        setCreditReason("");
+        setIsModalOpen(true);
+    };
+
+    const handleCreditSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedUserId || !creditAmount || !creditReason) return;
+
+        const amount = parseInt(creditAmount);
+        if (isNaN(amount)) return;
+
+        setIsSubmitting(true);
 
         // Optimistic update
-        setUsers(users.map(u => u.id === userId ? { ...u, credits: u.credits + amount } : u));
+        setUsers(users.map(u => u.id === selectedUserId ? { ...u, credits: u.credits + amount } : u));
 
-        const result = await adjustUserCredits(userId, amount, "Manual Adjustment", auth.currentUser?.email || "unknown");
+        const result = await adjustUserCredits(selectedUserId, amount, creditReason, auth.currentUser?.email || "unknown");
+
         if (!result.success) {
-            alert("Failed to update credits");
+            alert(t.admin.credit_modal.error);
             // Revert
-            setUsers(users.map(u => u.id === userId ? { ...u, credits: u.credits - amount } : u));
+            setUsers(users.map(u => u.id === selectedUserId ? { ...u, credits: u.credits - amount } : u));
+        } else {
+            alert(t.admin.credit_modal.success);
+            setIsModalOpen(false);
         }
+        setIsSubmitting(false);
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 relative">
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-2xl font-bold">{t.admin.users}</h2>
@@ -69,28 +92,72 @@ export default function ClientUserTable({ initialUsers }: { initialUsers: any[] 
                                     {new Date(user.createdAt).toLocaleDateString()}
                                 </td>
                                 <td className="p-4 text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <button
-                                            onClick={() => handleCreditAdjustment(user.id, 100)}
-                                            className="p-2 hover:bg-white/10 rounded-lg text-green-400"
-                                            title={t.admin.actions.add_credits}
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleCreditAdjustment(user.id, -100)}
-                                            className="p-2 hover:bg-white/10 rounded-lg text-red-400"
-                                            title={t.admin.actions.add_credits} // Should be remove, but using same for now or generic
-                                        >
-                                            <Minus className="w-4 h-4" />
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={() => openCreditModal(user.id)}
+                                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 text-xs transition-colors"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        {t.admin.actions.add_credits}
+                                    </button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+            {/* Credit Adjustment Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 shadow-2xl">
+                        <h3 className="text-xl font-bold mb-4">{t.admin.credit_modal.title}</h3>
+                        <form onSubmit={handleCreditSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-white/70 mb-1">
+                                    {t.admin.credit_modal.amount_label}
+                                </label>
+                                <input
+                                    type="number"
+                                    value={creditAmount}
+                                    onChange={(e) => setCreditAmount(e.target.value)}
+                                    placeholder={t.admin.credit_modal.amount_placeholder}
+                                    className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-white/70 mb-1">
+                                    {t.admin.credit_modal.reason_label}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={creditReason}
+                                    onChange={(e) => setCreditReason(e.target.value)}
+                                    placeholder={t.admin.credit_modal.reason_placeholder}
+                                    className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors"
+                                    required
+                                />
+                            </div>
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="flex-1 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 font-medium transition-colors"
+                                >
+                                    {t.admin.credit_modal.cancel}
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="flex-1 px-4 py-2 rounded-lg bg-white text-black font-bold hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                >
+                                    {isSubmitting ? "Processing..." : t.admin.credit_modal.confirm}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

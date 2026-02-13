@@ -128,10 +128,21 @@ export const ko: Translations = {
             actions: "관리",
         },
         actions: {
-            add_credits: "크레딧 추가",
+            add_credits: "크레딧 조정",
             ban: "차단하기",
             delete: "삭제",
             save: "저장하기",
+        },
+        credit_modal: {
+            title: "사용자 크레딧 조정",
+            amount_label: "조정할 크레딧",
+            amount_placeholder: "수량을 입력하세요 (예: 100 또는 -50)",
+            reason_label: "조정 사유",
+            reason_placeholder: "예: 환불, 이벤트 지급",
+            confirm: "조정 확인",
+            cancel: "취소",
+            success: "크레딧이 업데이트되었습니다",
+            error: "크레딧 업데이트 실패",
         },
         status: {
             active: "활동 중",

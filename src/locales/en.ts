@@ -126,10 +126,21 @@ export const en = {
             actions: "Actions",
         },
         actions: {
-            add_credits: "Add Credits",
+            add_credits: "Adjust Credits",
             ban: "Ban User",
             delete: "Delete",
             save: "Save Changes",
+        },
+        credit_modal: {
+            title: "Adjust User Credits",
+            amount_label: "Credit Amount",
+            amount_placeholder: "Enter amount (e.g. 100 or -50)",
+            reason_label: "Reason",
+            reason_placeholder: "e.g. Refund, Event Bonus",
+            confirm: "Confirm Adjustment",
+            cancel: "Cancel",
+            success: "Credits updated successfully",
+            error: "Failed to update credits",
         },
         status: {
             active: "Active",
