@@ -43,14 +43,13 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Strategy: Capability-001 + Synthetic Mask
-        // Problem: 'maskBase64' from client is a COLOR image (causing Invalid Argument).
-        // Solution: Use a 1x1 White Pixel as a mask to indicate "Edit Everything" (Variation).
+        // Final Working Strategy: Style-Based Generation (Variation)
+        // 1. Model: capability-001 (Parses 'Flattened' structure correctly).
+        // 2. Data: REFERENCE_TYPE_STYLE (Treats input as a style reference, not an edit target).
+        //          This generates a NEW image based on the prompt + style of input.
+        //          Crucially, this bypasses the need for a 'Mask' or 'editConfig'.
         const modelId = "imagen-3.0-capability-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
-
-        // 1x1 White PNG Base64 (Standard "Select All" mask)
-        const WHITE_MASK_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
         const payload = {
             instances: [
@@ -58,20 +57,11 @@ export async function generateBackground(
                     prompt: prompt,
                     referenceImages: [
                         {
-                            referenceType: "REFERENCE_TYPE_RAW",
+                            referenceType: "REFERENCE_TYPE_STYLE",
                             referenceId: 1,
                             referenceImage: {
-                                // Flattened structure (Proven Correct)
+                                // Flattened structure (Proven to be parsed by capability model)
                                 bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                mimeType: "image/png"
-                            }
-                        },
-                        {
-                            referenceType: "REFERENCE_TYPE_MASK",
-                            referenceId: 2,
-                            referenceImage: {
-                                // Synthetic White Mask (Proven Safe)
-                                bytesBase64Encoded: WHITE_MASK_BASE64,
                                 mimeType: "image/png"
                             }
                         }
@@ -80,12 +70,8 @@ export async function generateBackground(
             ],
             parameters: {
                 sampleCount: 1,
-                // No aspectRatio (avoid conflict)
-                editConfig: {
-                    baseImageReferenceId: 1,
-                    maskReferenceId: 2,
-                    editMode: "EDIT_MODE_DEFAULT"
-                }
+                aspectRatio: _aspectRatio,
+                // No editConfig needed for Style Generation
             }
         };
 
