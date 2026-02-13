@@ -56,7 +56,7 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
         } catch (err: any) {
             console.error("SMS Send Error:", err);
             setError(err.message || "Failed to send verification code");
-            window.recaptchaVerifier?.render().then(widgetId => {
+            window.recaptchaVerifier?.render().then((widgetId: number) => {
                 window.recaptchaVerifier?.reset(widgetId);
             });
         } finally {
