@@ -81,10 +81,11 @@ export async function generateBackground(
             return `data:image/png;base64,${generatedBase64}`;
         }
 
-        return imageBase64; // Fallback
+        throw new Error("No image generated");
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to generate background:", error);
-        return imageBase64; // Fallback to original on error to keep app usable
+        // Do NOT swallow the error. Throw it so the UI sees it.
+        throw new Error(`Image generation failed: ${error.message || error}`);
     }
 }
