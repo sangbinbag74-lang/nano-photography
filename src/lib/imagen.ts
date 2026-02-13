@@ -43,11 +43,12 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Solution: Capability-001 with Nested Reference Image (Base Only).
-        // 1. Model: capability-001 (Supported for editing/variation).
-        // 2. Data: Nested 'referenceImage.image' structure (Required by API).
-        // 3. Mask: REMOVED. Passing a color image as mask caused 'Invalid Argument'.
-        // 4. Config: EDIT_MODE_DEFAULT (Standard for variation without mask).
+        // Final Correct Logic:
+        // 1. Model: capability-001 (Correct).
+        // 2. Image Structure: FLATTENED (Proven correct by Step 1274 'Invalid editConfig' error, meaning image was parsed).
+        //    (Nested structure caused 'Image should have either uri' error in Step 1364).
+        // 3. Config: EDIT_MODE_DEFAULT.
+        // 4. Fix: Remove 'aspectRatio' to prevent conflict with base image dimensions during editing.
         const modelId = "imagen-3.0-capability-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
@@ -61,10 +62,9 @@ export async function generateBackground(
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
                             referenceImage: {
-                                image: {
-                                    bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                    mimeType: "image/png"
-                                }
+                                // FLATTENED Structure (Direct bytes) - This is what the parser accepted in Step 1271.
+                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                                mimeType: "image/png"
                             }
                         }
                     ]
@@ -72,7 +72,7 @@ export async function generateBackground(
             ],
             parameters: {
                 sampleCount: 1,
-                aspectRatio: _aspectRatio,
+                // Removed aspectRatio to rely on Base Image dimensions and avoid config conflict.
                 editConfig: {
                     baseImageReferenceId: 1,
                     editMode: "EDIT_MODE_DEFAULT"
