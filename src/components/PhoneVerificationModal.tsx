@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { auth } from "@/lib/firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { Loader2, Phone, ShieldCheck } from "lucide-react";
@@ -21,11 +22,13 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
     const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
+    const [mounted, setMounted] = useState(false);
 
     // Default to Korea or first country
     const [selectedCountry, setSelectedCountry] = useState(countries.find(c => c.code === "KR") || countries[0]);
 
     useEffect(() => {
+        setMounted(true);
         if (isOpen && !window.recaptchaVerifier) {
             window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
                 'size': 'invisible',
@@ -95,15 +98,15 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
         }
     };
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto">
+    return createPortal(
+        <div className="fixed inset-0 z-[99999] overflow-y-auto">
             {/* Backdrop */}
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-            {/* Modal Positioning Wrapper */}
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
+            {/* Modal Positioning Wrapper - using flex min-h-screen for absolute centering assurance */}
+            <div className="flex min-h-screen items-center justify-center p-4 text-center">
                 <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-[#1a1a1a] border border-white/10 p-6 text-left shadow-2xl transition-all">
                     <div id="recaptcha-container" className="invisible absolute"></div>
 
@@ -220,7 +223,8 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
