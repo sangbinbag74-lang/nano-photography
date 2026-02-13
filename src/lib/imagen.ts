@@ -43,38 +43,52 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Updated to Imagen 3 (Standard for 2026)
-        // 'imagegeneration@006' is retired as of late 2025.
-        // We use the stable 'imagen-3.0-generate-001'.
-        const modelId = "imagen-3.0-generate-001";
+        // Updated to Imagen 3 Capability Model (Required for Editing/Variations)
+        const modelId = "imagen-3.0-capability-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
+
+        // Payload for Imagen 3 Editing/Variation
+        const payload = {
+            instances: [
+                {
+                    prompt: prompt,
+                    referenceImages: [
+                        {
+                            referenceType: "REFERENCE_TYPE_RAW",
+                            referenceId: 1,
+                            image: { bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, "") },
+                        },
+                        // If mask is provided and different from image, include it.
+                        // But for now, we assume implicit background editing or style transfer.
+                        // Passing mask as raw image is bad practice, so we omit it unless it's a real mask.
+                    ]
+                }
+            ],
+            parameters: {
+                sampleCount: 1,
+                aspectRatio: _aspectRatio,
+                // Optional: editConfig for specific modes like 'product-image' or 'background-swap'
+                // For general style variation, we rely on the prompt.
+                editConfig: {
+                    editMode: "EDIT_MODE_DEFAULT"
+                }
+            }
+        };
 
         const response = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json; charset=utf-8",
+                "Content-Type": "application/json; charset=utf-8`,
             },
-            body: JSON.stringify({
-                instances: [
-                    {
-                        prompt: prompt,
-                        image: { bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, "") },
-                    }
-                ],
-                parameters: {
-                    sampleCount: 1,
-                    aspectRatio: _aspectRatio,
-                    // negativePrompt: "low quality, text, watermark",
-                }
-            })
+            body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
             const errorText = await response.text();
             console.error("Imagen API Error:", errorText);
-            throw new Error(`Imagen API Failed: ${response.statusText} - ${errorText}`);
+            throw new Error(`Imagen API Failed: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
@@ -88,7 +102,6 @@ export async function generateBackground(
 
     } catch (error: any) {
         console.error("Failed to generate background:", error);
-        // Do NOT swallow the error. Throw it so the UI sees it.
         throw new Error(`Image generation failed: ${error.message || error}`);
     }
 }
