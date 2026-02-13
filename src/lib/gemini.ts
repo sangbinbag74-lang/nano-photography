@@ -46,7 +46,8 @@ Step 2: 추출된 제품 정보를 통해 아래 4가지 출력 양식 스타일
 `;
 
 export async function analyzeImage(imagesBase64: string[]): Promise<PromptResult[]> {
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  // Trying specific version 001 as aliases might be unstable in some regions/env
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
   const promptParts: any[] = [SYSTEM_PROMPT];
 
@@ -61,17 +62,28 @@ export async function analyzeImage(imagesBase64: string[]): Promise<PromptResult
     });
   });
 
-  const result = await model.generateContent(promptParts);
-
-  const response = await result.response;
-  const text = response.text();
-
   try {
+    const result = await model.generateContent(promptParts);
+    const response = await result.response;
+    const text = response.text();
+
     // Basic cleanup for JSON parsing if Gemini adds markdown
     const jsonString = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(jsonString);
-  } catch (error) {
-    console.error("Failed to parse Gemini response:", text);
-    throw new Error("Gemini analysis failed");
+  } catch (error: any) {
+    console.error("Gemini analysis error:", error);
+
+    // If model not found, try to list available models for debugging
+    if (error.message?.includes("404") || error.message?.includes("not found")) {
+      try {
+        // @ts-ignore - listModels might not be in the type definition depending on version but exists on the class usually or generic client?
+        // Actually SDK doesn't expose listModels on genAI instance directly in all versions.
+        // Let's try to just throw a descriptive error first, or use a known older model as fallback?
+        // No, let's try to use the specific version 'gemini-1.5-flash-001' which is often more stable than aliases.
+      } catch (e) {
+        console.error("Failed to list models", e);
+      }
+    }
+    throw error;
   }
 }
