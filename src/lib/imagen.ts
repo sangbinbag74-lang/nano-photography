@@ -104,31 +104,4 @@ export async function generateBackground(
         console.error("Failed to generate background:", error);
         throw new Error(`Image generation failed: ${error.message || error}`);
     }
-    method: "POST",
-        headers: {
-        "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json; charset=utf-8",
-    },
-    body: JSON.stringify(payload)
-});
 
-if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Imagen API Error:", errorText);
-    throw new Error(`Imagen API Failed: ${response.status} - ${errorText}`);
-}
-
-const data = await response.json();
-const generatedBase64 = data.predictions?.[0]?.bytesBase64Encoded;
-
-if (generatedBase64) {
-    return `data:image/png;base64,${generatedBase64}`;
-}
-
-throw new Error("No image generated");
-
-    } catch (error: any) {
-    console.error("Failed to generate background:", error);
-    throw new Error(`Image generation failed: ${error.message || error}`);
-}
-}
