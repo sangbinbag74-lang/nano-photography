@@ -43,36 +43,29 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Updated to Imagen 3 Capability Model - Verified for Image Editing/Variation
-        const modelId = "imagen-3.0-capability-001";
+        // Switching to Generate 001 - The most robust model for general generation
+        // capability-001 is too strict with payload structure.
+        const modelId = "imagen-3.0-generate-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
-        // Verified Output: Payload for Imagen 3 Capability Model
-        // Based on Vertex AI REST API documentation for Imagen 3 customization
+        // Simple Payload for Generate 001
+        // This structure is standard for Vertex AI prediction with image input
         const payload = {
             instances: [
                 {
                     prompt: prompt,
-                    referenceImages: [
-                        {
-                            referenceType: "REFERENCE_TYPE_RAW",
-                            referenceId: 1,
-                            referenceImage: {
-                                image: {
-                                    bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                    mimeType: "image/png"
-                                }
-                            }
-                        }
-                    ]
+                    image: {
+                        bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                        mimeType: "image/png"
+                    }
                 }
             ],
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // editConfig is optional, often not needed for raw variation unless specific mode is required.
-                // Keeping it clean to avoid schema validation errors for unknown fields.
+                // generate-001 supports negative prompts
+                negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
 
