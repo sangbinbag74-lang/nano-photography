@@ -43,18 +43,18 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Solution: Capability-001 (Alive) + Style Mode + Dynamic MimeType
-        // 1. Model: imagen-3.0-capability-001 (imagegeneration@006 is 404/Retired).
-        // 2. MimeType: Dynamic (Crucial: Fixes 'Invalid Argument' caused by sending JPEG as PNG).
-        // 3. Mode: REFERENCE_TYPE_STYLE (Crucial: Bypasses 'Mask' requirement of Edit Mode).
-        //    (Previous attempts failed because we either had Wrong MimeType OR Wrong Mask Size).
-        //    (This combination is the only one that satisfies all constraints).
+        // Final Corrective Strategy: Generate-001 + Style Reference
+        // 1. Model: imagen-3.0-generate-001 (The correct model for Text-to-Image with References).
+        //    (capability-001 is for Editing/Inpainting and insists on Masks).
+        // 2. MimeType: Dynamic (Crucial fix for JPEG inputs).
+        // 3. Structure: Nested 'referenceImage.image' (Required for generate-001).
+        // 4. Type: REFERENCE_TYPE_STYLE (Safe variation mode).
 
         const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
-        const mimeType = matches ? matches[1] : "image/png"; // Correctly detect JPEG/PNG
+        const mimeType = matches ? matches[1] : "image/png";
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-        const modelId = "imagen-3.0-capability-001";
+        const modelId = "imagen-3.0-generate-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
         const payload = {
@@ -66,9 +66,10 @@ export async function generateBackground(
                             referenceType: "REFERENCE_TYPE_STYLE",
                             referenceId: 1,
                             referenceImage: {
-                                // Flattened structure is correct for capability-001
-                                bytesBase64Encoded: cleanBase64,
-                                mimeType: mimeType
+                                image: {
+                                    bytesBase64Encoded: cleanBase64,
+                                    mimeType: mimeType
+                                }
                             }
                         }
                     ]
@@ -76,7 +77,7 @@ export async function generateBackground(
             ],
             parameters: {
                 sampleCount: 1,
-                // Style/Variation generation does not use 'editConfig'
+                // generate-001 parameters (no editConfig)
                 negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
