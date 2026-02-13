@@ -43,40 +43,27 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Updated to Imagen 3 Capability Model (Required for Editing/Variations)
-        const modelId = "imagen-3.0-capability-001";
+        // Switching to Generate 001 with simple payload to avoid 400 errors with referenceImages
+        const modelId = "imagen-3.0-generate-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
-        // Payload for Imagen 3 Editing/Variation
+        // Simple Payload (Image-to-Image / Prompt Driven)
         const payload = {
             instances: [
                 {
                     prompt: prompt,
-                    referenceImages: [
-                        {
-                            referenceType: "REFERENCE_TYPE_RAW",
-                            referenceId: 1,
-                            // The field name is 'image', which contains 'bytesBase64Encoded' and 'mimeType'
-                            image: {
-                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                mimeType: "image/png"
-                            },
-                        },
-                        // If mask is provided and different from image, include it.
-                        // But for now, we assume implicit background editing or style transfer.
-                        // Passing mask as raw image is bad practice, so we omit it unless it's a real mask.
-                    ]
+                    image: {
+                        bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                        mimeType: "image/png"
+                    }
                 }
             ],
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // Optional: editConfig for specific modes like 'product-image' or 'background-swap'
-                // For general style variation, we rely on the prompt.
-                editConfig: {
-                    editMode: "EDIT_MODE_DEFAULT"
-                }
+                // generate-001 supports negativePrompt, ensuring quality
+                negativePrompt: "low quality, text, watermark, blur, deformed",
             }
         };
 
