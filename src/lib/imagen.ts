@@ -97,8 +97,11 @@ export async function generateBackground(
                 sampleCount: 1,
                 priority: "sampleCount", // Optional but good for v1beta1
                 negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
+                aspectRatio: "3:4" // Explicitly request 3:4 to match typical portrait/product needs
             }
         };
+
+        console.log("Imagen Payload:", JSON.stringify(payload, null, 2));
 
         const response = await fetch(endpoint, {
             method: "POST",
