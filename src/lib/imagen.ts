@@ -73,9 +73,11 @@ export async function generateBackground(
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // Include editConfig to signal this is an editing task, preventing 500s on ambiguous requests
+                // editConfig is required for editing tasks.
+                // We use EDIT_MODE_DEFAULT for general image editing/variation.
                 editConfig: {
-                    baseImageReferenceId: 1
+                    baseImageReferenceId: 1,
+                    editMode: "EDIT_MODE_DEFAULT"
                 }
             }
         };
