@@ -51,10 +51,10 @@ export async function generateBackground(
         // 3. Model: capability-001 (Correct model).
         // 4. MimeType: Dynamic (Correct data format).
 
-        // Final Strategy: Force 1-Channel Grayscale Mask
-        // 1. "Invalid Argument" with RGB mask -> Model likely strictly wants Grayscale.
-        // 2. Previous attempt at Grayscale failed due to TS Build Error, not API rejection.
-        // 3. Solution: Use // @ts-ignore to force 'channels: 1' (Valid Runtime, Invalid TS).
+        // Final Strategy: Create RGB -> Convert to Grayscale
+        // 1. Sharp ERRORs if we try to 'create' 1-channel directly (requires 3-4).
+        // 2. Vertex ERRORs if we send 3-channel RGB (Invalid Argument).
+        // 3. Solution: Create 3-Channel White -> Convert to .grayscale() -> Export PNG.
 
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
         const inputBuffer = Buffer.from(cleanBase64, "base64");
@@ -74,17 +74,17 @@ export async function generateBackground(
         const width = processedMetadata.width || 1024;
         const height = processedMetadata.height || 1024;
 
-        // 2. Generate Grayscale Mask (1-Channel) MATCHING Resized Input
-        // @ts-ignore - sharp types incorrectly flag 'channels: 1' as invalid, but it works at runtime.
+        // 2. Generate Mask: Create RGB (valid for Sharp) -> Grayscale (valid for Vertex)
         const maskBuffer = await sharp({
             create: {
                 width: width,
                 height: height,
-                channels: 1,
-                background: { r: 255 } // White in Grayscale
+                channels: 3,
+                background: { r: 255, g: 255, b: 255 }
             }
         })
-            .png()
+            .grayscale() // Force to 1-channel (luminance)
+            .png() // Export as 1-channel PNG
             .toBuffer();
 
         const generatedMaskBase64 = maskBuffer.toString("base64");
