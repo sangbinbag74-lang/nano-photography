@@ -66,8 +66,8 @@ export async function generateBackground(
             create: {
                 width: width,
                 height: height,
-                channels: 4,
-                background: { r: 255, g: 255, b: 255, alpha: 255 } // Solid White
+                channels: 1, // Grayscale (1 channel) - Critical for valid Mask format
+                background: { r: 255 } // Solid White (255)
             }
         })
             .png()
