@@ -49,6 +49,7 @@ export async function generateBackground(
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
         // Verified Output: Payload for Imagen 3 Capability Model
+        // Based on Vertex AI REST API documentation for Imagen 3 customization
         const payload = {
             instances: [
                 {
@@ -57,18 +58,12 @@ export async function generateBackground(
                         {
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
-                            // The field name is 'referenceImage', containing 'image' which has 'bytesBase64Encoded' and 'mimeType'
-                            // NOTE: Some docs say 'image' directly, others 'referenceImage'.
-                            // Based on 400 error "Reference image should have image field", the structure is:
-                            // referenceImages[].referenceImage.image
-                            // OR referenceImages[].image (if type is implied).
-                            // Let's go with the most explicit structure based on the error message hint.
-                            // Actually, standard Vertex AI prediction for this model usually expects:
-                            // { referenceType: ..., referenceId: ..., image: { bytes..., mimeType... } }
-                            image: {
-                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                mimeType: "image/png"
-                            },
+                            referenceImage: {
+                                image: {
+                                    bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                                    mimeType: "image/png"
+                                }
+                            }
                         }
                     ]
                 }
@@ -76,8 +71,8 @@ export async function generateBackground(
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // editConfig is optional but recommended if we want to ensure 'product-image' or similar behavior
-                // For now, leaving it implicit based on prompt + reference.
+                // editConfig is optional, often not needed for raw variation unless specific mode is required.
+                // Keeping it clean to avoid schema validation errors for unknown fields.
             }
         };
 
