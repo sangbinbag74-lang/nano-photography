@@ -61,10 +61,10 @@ export async function generateBackground(
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
                             referenceImage: {
-                                image: {
-                                    bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                    mimeType: "image/png"  // Explicitly include mimeType
-                                }
+                                // Flattened structure: The API likely expects the Image object properties directly here
+                                // or 'bytesBase64Encoded' is the direct field for raw image data.
+                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                                mimeType: "image/png"
                             }
                         }
                     ]
