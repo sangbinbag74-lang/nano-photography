@@ -74,16 +74,29 @@ export default function Home() {
     setResults([]);
 
     try {
-      const formData = new FormData();
-      if (user) formData.append("userId", user.uid); // Pass userId for server-side check
+      if (!user) {
+        throw new Error(t.auth.login_required || "User not found");
+      }
 
-      files.forEach(file => {
-        formData.append("image", file);
-      });
+      // 1. Upload images to Firebase Storage first (Client-side)
+      // This bypasses the Vercel/Next.js body size limit (4.5MB)
+      console.log("Uploading images to storage...");
+      const uploadedUrls = await Promise.all(files.map(async (file) => {
+        const path = `uploads/${user.uid}/${uuidv4()}_input.png`;
+        const url = await uploadFile(file, path);
+        return url;
+      }));
 
+      // 2. Send URLs to API
       const response = await fetch("/api/process", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          imageUrls: uploadedUrls
+        }),
       });
 
       if (response.status === 402) {
@@ -93,11 +106,33 @@ export default function Home() {
       }
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to process image");
       }
 
-      // ... (rest of success logic)
+      const data = await response.json();
+      setResults(data.results);
+
+      if (user && data.results.length > 0) {
+        // We already have originalUrls (uploadedUrls).
+        // Save generated images to history
+        await Promise.all(data.results.map(async (res: any) => {
+          await Promise.all(res.generatedImages.map(async (genImg: string, idx: number) => {
+            if (genImg.startsWith("data:")) {
+              const genPath = `generations/${user.uid}/${uuidv4()}_${res.style}_${idx}.png`;
+              const genUrl = await uploadImage(genImg, genPath);
+
+              await saveToHistory({
+                userId: user.uid,
+                originalImage: uploadedUrls[idx] || uploadedUrls[0], // Map simply
+                generatedImage: genUrl,
+                style: res.style,
+                prompt: res.description,
+              });
+            }
+          }));
+        }));
+      }
 
     } catch (_error: any) {
       console.error(_error);
