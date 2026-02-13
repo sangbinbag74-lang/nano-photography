@@ -57,7 +57,10 @@ export async function generateBackground(
                         {
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
-                            image: { bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, "") },
+                            image: {
+                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                                mimeType: "image/png" // Required by Imagen 3
+                            },
                         },
                         // If mask is provided and different from image, include it.
                         // But for now, we assume implicit background editing or style transfer.
