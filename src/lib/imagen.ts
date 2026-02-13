@@ -43,40 +43,30 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Correct Logic: Style-Based Variation with Dynamic MimeType
-        // 1. Model: capability-001 (Correct model).
-        // 2. MimeType: Dynamic (Fixes 'Invalid Argument' for JPEGs).
-        // 3. Mode: REFERENCE_TYPE_STYLE (Input image guides the style/content).
-        //          This bypasses strict 'Mask' requirements and 'EditConfig' errors.
-        //          The previous '1x1 Mask' attempt failed likely due to dimension mismatch.
+        // Strategy: Revert to Imagen 2 (Stable)
+        // Imagen 3 models are rejecting the input with 'Invalid Argument' or 'Internal Error'.
+        // We switch to 'imagegeneration@006' (Imagen 2) which is more permissive and robust for variations.
 
         const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
-        const mimeType = matches ? matches[1] : "image/png"; // Correctly identify JPEG vs PNG
+        // Clean Base64 (Remove header)
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-        const modelId = "imagen-3.0-capability-001";
+        const modelId = "imagegeneration@006"; // Imagen 2
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
         const payload = {
             instances: [
                 {
                     prompt: prompt,
-                    referenceImages: [
-                        {
-                            referenceType: "REFERENCE_TYPE_STYLE",
-                            referenceId: 1,
-                            referenceImage: {
-                                // Flattened structure + Correct MimeType
-                                bytesBase64Encoded: cleanBase64,
-                                mimeType: mimeType
-                            }
-                        }
-                    ]
+                    image: {
+                        bytesBase64Encoded: cleanBase64
+                        // Imagen 2 infers mimeType or ignores it, commonly just bytes.
+                    }
                 }
             ],
             parameters: {
                 sampleCount: 1,
-                // No need for editConfig or aspect ratio in Style mode
+                // Imagen 2 parameters
                 negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
