@@ -260,9 +260,9 @@ export default function Home() {
                     const styleToSelect = results.find(r => r.style === opt.style);
                     if (!styleToSelect) return;
 
-                    // If we only have the preview (1 image), generate the remaining 3 images now
-                    if (styleToSelect.generatedImages.length <= 1) {
-                      setIsAnalyzing(true); // Shows LoadingOverlay because selectedResult is still null
+                    // Text-Only Mode -> Generate All 4 Images
+                    if (!styleToSelect.generatedImages || styleToSelect.generatedImages.length === 0) {
+                      setIsAnalyzing(true);
 
                       try {
                         const res = await fetch("/api/generate-variation", {
@@ -278,7 +278,6 @@ export default function Home() {
 
                         if (res.ok) {
                           const data = await res.json();
-                          // Update results with the newly generated images
                           const updatedResults = results.map(r => {
                             if (r.style === opt.style) {
                               return { ...r, generatedImages: data.generatedImages };
@@ -287,20 +286,18 @@ export default function Home() {
                           });
                           setResults(updatedResults);
 
-                          // Select the UPDATED result so we see all 4 images
                           const updatedStyle = updatedResults.find(r => r.style === opt.style);
                           setSelectedResult(updatedStyle);
                         } else {
-                          alert("Failed to generate variations. Please try again.");
+                          alert("Failed to generate. Please try again.");
                         }
                       } catch (e) {
-                        console.error("Variation generation error:", e);
-                        alert("An error occurred while generating variations.");
+                        console.error("Generation error:", e);
+                        alert("An error occurred while generating.");
                       } finally {
                         setIsAnalyzing(false);
                       }
                     } else {
-                      // Already have all images, just select
                       setSelectedResult(styleToSelect);
                     }
                   }}

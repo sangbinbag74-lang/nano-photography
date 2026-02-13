@@ -27,7 +27,7 @@ export default function StyleSelector({ options, onSelect }: StyleSelectorProps)
                     key={index}
                     className="group relative rounded-3xl overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2"
                     onClick={() => onSelect?.(option)}
-                >
+
                 >
                     {/* Background Container */}
                     <div className="aspect-[16/10] relative overflow-hidden bg-white/5 group-hover:bg-white/10 transition-colors duration-500">
