@@ -51,11 +51,11 @@ export async function generateBackground(
         // 3. Model: capability-001 (Correct model).
         // 4. MimeType: Dynamic (Correct data format).
 
-        // Final Strategy: Switch to 'generate-001' + Subject Reference
-        // 1. 'capability-001' with Masks is failing repeatedly (Invalid Argument).
-        // 2. 'capability-001' BGSWAP failed config.
-        // 3. Solution: Use 'generate-001' which supports "Subject Reference" for background generation.
-        //    This avoids Masks/EditConfig entirely.
+        // Final Strategy: v1beta1 Endpoint + Generate-001 + Subject Reference
+        // 1. Imagen 3 features (Subject Ref) require 'v1beta1' API version (Preview).
+        //    Using 'v1' caused "Invalid Argument" because the field was not recognized.
+        // 2. We use 'imagen-3.0-generate-001' which supports background generation via Subject Ref.
+        // 3. We Add 'subjectDescription' which is required for REFERENCE_TYPE_SUBJECT.
 
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
         const inputBuffer = Buffer.from(cleanBase64, "base64");
@@ -73,7 +73,8 @@ export async function generateBackground(
         // NO Mask required for 'generate-001' subject reference
 
         const modelId = "imagen-3.0-generate-001";
-        const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
+        // CRITICAL: Must use v1beta1 for Reference Images
+        const endpoint = `https://${location}-aiplatform.googleapis.com/v1beta1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
         const payload = {
             instances: [
@@ -81,19 +82,20 @@ export async function generateBackground(
                     prompt: prompt,
                     referenceImages: [
                         {
-                            referenceType: "REFERENCE_TYPE_SUBJECT", // Preserves subject, changes background
+                            referenceType: "REFERENCE_TYPE_SUBJECT",
                             referenceId: 1,
                             referenceImage: {
                                 bytesBase64Encoded: processedInputBase64,
                                 mimeType: "image/png"
-                            }
+                            },
+                            subjectDescription: "Main subject of the image" // Required for Subject Reference
                         }
                     ]
                 }
             ],
             parameters: {
                 sampleCount: 1,
-                // No editConfig needed for generate-001
+                priority: "sampleCount", // Optional but good for v1beta1
                 negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
