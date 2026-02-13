@@ -77,7 +77,7 @@ export async function saveUser(user: { uid: string; email: string | null; displa
                 email: user.email,
                 displayName: user.displayName,
                 photoURL: user.photoURL,
-                credits: 5, // Default credits
+                credits: 0, // Default 0 (requires verification for +5)
                 createdAt: Timestamp.now(),
                 lastLogin: Timestamp.now(),
                 status: "active",
@@ -92,5 +92,41 @@ export async function saveUser(user: { uid: string; email: string | null; displa
         }
     } catch (e) {
         console.error("Error saving user: ", e);
+    }
+}
+
+export async function verifyUserPhone(userId: string, phoneNumber: string) {
+    try {
+        const userRef = doc(db, "users", userId);
+
+        // Check if phone number is already used by another user
+        const q = query(collection(db, "users"), where("phoneNumber", "==", phoneNumber));
+        const querySnapshot = await getDocs(q);
+
+        // Filter out self-match if re-verifying
+        const duplicates = querySnapshot.docs.filter(doc => doc.id !== userId);
+
+        if (duplicates.length > 0) {
+            throw new Error("Phone number already linked to another account.");
+        }
+
+        const userSnap = await getDoc(userRef);
+        const currentCredits = userSnap.data()?.credits || 0;
+        const isAlreadyVerified = userSnap.data()?.isVerified || false;
+
+        // Give +5 credits only if first time verifying
+        const newCredits = isAlreadyVerified ? currentCredits : currentCredits + 5;
+
+        await setDoc(userRef, {
+            phoneNumber: phoneNumber,
+            isVerified: true,
+            credits: newCredits
+        }, { merge: true });
+
+        console.log("User verified:", userId);
+        return { success: true };
+    } catch (e: any) {
+        console.error("Error verifying user: ", e);
+        throw e;
     }
 }
