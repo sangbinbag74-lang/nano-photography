@@ -43,9 +43,11 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Corrective Action: Capability Model with Base + Mask
-        // The previous 'Invalid editConfig' was likely due to missing MASK reference for editing.
-        // The calling function provides 'maskBase64', so we must use it.
+        // Final Solution: Capability-001 with Nested Reference Image (Base Only).
+        // 1. Model: capability-001 (Supported for editing/variation).
+        // 2. Data: Nested 'referenceImage.image' structure (Required by API).
+        // 3. Mask: REMOVED. Passing a color image as mask caused 'Invalid Argument'.
+        // 4. Config: EDIT_MODE_DEFAULT (Standard for variation without mask).
         const modelId = "imagen-3.0-capability-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
@@ -59,16 +61,10 @@ export async function generateBackground(
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
                             referenceImage: {
-                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                mimeType: "image/png"
-                            }
-                        },
-                        {
-                            referenceType: "REFERENCE_TYPE_MASK",
-                            referenceId: 2,
-                            referenceImage: {
-                                bytesBase64Encoded: maskBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                mimeType: "image/png"
+                                image: {
+                                    bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                                    mimeType: "image/png"
+                                }
                             }
                         }
                     ]
@@ -79,8 +75,7 @@ export async function generateBackground(
                 aspectRatio: _aspectRatio,
                 editConfig: {
                     baseImageReferenceId: 1,
-                    maskReferenceId: 2,
-                    editMode: "EDIT_MODE_DEFAULT" // Default editing with mask context
+                    editMode: "EDIT_MODE_DEFAULT"
                 }
             }
         };
