@@ -32,11 +32,20 @@ export async function POST(req: NextRequest) {
 
         for (const original of originalsBase64) {
             try {
+                console.log("Calling generateBackground for image...");
                 const gen = await generateBackground(original, original, prompt);
+                console.log("Generation success, length:", gen?.length);
                 generatedImages.push(gen);
-            } catch (e) {
-                console.error(e);
-                generatedImages.push(null);
+            } catch (e: any) {
+                console.error("Variation generation failed for single image:", e);
+                // detailed logging
+                if (e.response) {
+                    console.error("API Response:", await e.response.text().catch(() => "No body"));
+                }
+                // DO NOT HIDE ERROR. Throw so user sees it.
+                // The outer try/catch (line 45) will catch this and return 500 error.
+                // Or if we want to fail fast for all images?
+                throw e;
             }
         }
 
