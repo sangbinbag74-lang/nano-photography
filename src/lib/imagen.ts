@@ -43,21 +43,19 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // The Ultimate Fix: Capability Model + Dynamic Mime + Synthetic Mask
-        // 1. Model: capability-001 (generate-001 is text-only -> 500 Error).
-        // 2. MimeType: Dynamic (Hardcoded PNG caused 'Invalid Argument' for JPEGs).
-        // 3. Structure: Flattened (Nested caused errors in capability model).
-        // 4. Mask: Synthetic White 1x1 (Required for EDIT_MODE_DEFAULT to work without error).
+        // Final Correct Logic: Style-Based Variation with Dynamic MimeType
+        // 1. Model: capability-001 (Correct model).
+        // 2. MimeType: Dynamic (Fixes 'Invalid Argument' for JPEGs).
+        // 3. Mode: REFERENCE_TYPE_STYLE (Input image guides the style/content).
+        //          This bypasses strict 'Mask' requirements and 'EditConfig' errors.
+        //          The previous '1x1 Mask' attempt failed likely due to dimension mismatch.
 
         const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
-        const mimeType = matches ? matches[1] : "image/png"; // Fallback if missing
+        const mimeType = matches ? matches[1] : "image/png"; // Correctly identify JPEG vs PNG
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
         const modelId = "imagen-3.0-capability-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
-
-        // 1x1 White PNG Base64 (Standard "Select All" mask for variation)
-        const WHITE_MASK_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==";
 
         const payload = {
             instances: [
@@ -65,21 +63,12 @@ export async function generateBackground(
                     prompt: prompt,
                     referenceImages: [
                         {
-                            referenceType: "REFERENCE_TYPE_RAW",
+                            referenceType: "REFERENCE_TYPE_STYLE",
                             referenceId: 1,
                             referenceImage: {
-                                // Flattened structure (Proven Correct for capability-001)
+                                // Flattened structure + Correct MimeType
                                 bytesBase64Encoded: cleanBase64,
-                                mimeType: mimeType // Dynamic MimeType
-                            }
-                        },
-                        {
-                            referenceType: "REFERENCE_TYPE_MASK",
-                            referenceId: 2,
-                            referenceImage: {
-                                // Synthetic Mask (Always PNG)
-                                bytesBase64Encoded: WHITE_MASK_BASE64,
-                                mimeType: "image/png"
+                                mimeType: mimeType
                             }
                         }
                     ]
@@ -87,12 +76,8 @@ export async function generateBackground(
             ],
             parameters: {
                 sampleCount: 1,
-                // No aspectRatio (Avoid conflict with Base Image)
-                editConfig: {
-                    baseImageReferenceId: 1,
-                    maskReferenceId: 2,
-                    editMode: "EDIT_MODE_DEFAULT"
-                }
+                // No need for editConfig or aspect ratio in Style mode
+                negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
 
