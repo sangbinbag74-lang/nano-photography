@@ -43,17 +43,37 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Strategy: Capability-001 + BGSWAP + Dynamic MimeType
-        // 1. Model: capability-001 (Alive).
-        // 2. MimeType: Dynamic (Fixes 'Invalid Argument' mismatch).
-        // 3. Mode: EDIT_MODE_BGSWAP (Background Swap).
-        //    (Previous BGSWAP attempt failed because MimeType was wrong).
-        //    (BGSWAP auto-segments, so NO MASK is needed).
-        // 4. Structure: Flattened (Correct for capability-001).
+        // Final Strategy: Sharp + Capability-001 + Dynamic Mask
+        // 1. Problem: 'capability-001' requires a mask that MATCHES the input image dimensions.
+        //    (1x1 mask caused 'Invalid Argument').
+        //    (No mask caused 'Invalid editConfig').
+        // 2. Solution: Use 'sharp' to read input dimensions and generate a perfect White Mask.
+        // 3. Model: capability-001 (Correct model).
+        // 4. MimeType: Dynamic (Correct data format).
 
         const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
         const mimeType = matches ? matches[1] : "image/png";
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+        const imageBuffer = Buffer.from(cleanBase64, "base64");
+
+        // Generate Dynamic White Mask matching input dimensions
+        // This is the ONLY way to satisfy the strict dimension requirement of capability-001.
+        const metadata = await sharp(imageBuffer).metadata();
+        const width = metadata.width || 1024;
+        const height = metadata.height || 1024;
+
+        const maskBuffer = await sharp({
+            create: {
+                width: width,
+                height: height,
+                channels: 4,
+                background: { r: 255, g: 255, b: 255, alpha: 255 } // Solid White
+            }
+        })
+            .png()
+            .toBuffer();
+
+        const generatedMaskBase64 = maskBuffer.toString("base64");
 
         const modelId = "imagen-3.0-capability-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
@@ -67,9 +87,16 @@ export async function generateBackground(
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
                             referenceImage: {
-                                // Flattened structure
                                 bytesBase64Encoded: cleanBase64,
                                 mimeType: mimeType
+                            }
+                        },
+                        {
+                            referenceType: "REFERENCE_TYPE_MASK",
+                            referenceId: 2,
+                            referenceImage: {
+                                bytesBase64Encoded: generatedMaskBase64,
+                                mimeType: "image/png" // Mask is always PNG
                             }
                         }
                     ]
@@ -79,8 +106,10 @@ export async function generateBackground(
                 sampleCount: 1,
                 editConfig: {
                     baseImageReferenceId: 1,
-                    editMode: "EDIT_MODE_BGSWAP"
-                }
+                    maskReferenceId: 2,
+                    editMode: "EDIT_MODE_DEFAULT"
+                },
+                negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
 
