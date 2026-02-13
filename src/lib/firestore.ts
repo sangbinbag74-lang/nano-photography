@@ -1,5 +1,5 @@
 
-import { ref, uploadString, getDownloadURL } from "firebase/storage";
+import { ref, uploadString, getDownloadURL, uploadBytes } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { collection, addDoc, query, where, orderBy, getDocs, Timestamp, doc, setDoc, getDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
@@ -17,6 +17,18 @@ export async function uploadImage(base64: string, path: string): Promise<string>
         return url;
     } catch (e) {
         console.error("Error uploading image: ", e);
+        throw e;
+    }
+}
+
+export async function uploadFile(file: File, path: string): Promise<string> {
+    try {
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        return url;
+    } catch (e) {
+        console.error("Error uploading file: ", e);
         throw e;
     }
 }

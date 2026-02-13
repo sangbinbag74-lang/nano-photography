@@ -7,34 +7,18 @@ import { adminDb } from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
     try {
-        const formData = await req.formData();
-        const files = formData.getAll("image") as File[];
-
-        // --- Authentication & Credit Check ---
-        // In a real app, send ID token in headers and verify with admin.auth().verifyIdToken()
-        // For this MVP, we will try to get the uid from a header or simply trust the client sends it in formData?
-        // NO, we MUST secure this. The client should send the UID or token.
-        // Let's assume for now we pass 'userId' in formData for MVP speed, 
-        // BUT ideally we should use Authorization header.
-
-        // Let's modify client to send userId in formData for simplicity in this specific context,
-        // OR better, let's extract it if present.
-        const userId = formData.get("userId") as string;
+        const body = await req.json();
+        const { userId, imageUrls } = body;
 
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized: User ID required" }, { status: 401 });
         }
 
-        if (!files || files.length === 0) {
+        if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
             return NextResponse.json({ error: "No images provided" }, { status: 400 });
         }
 
-        // COST: 4 credits per generation request (regardless of how many images, for now?)
-        // The plan says "1 generation (4 angles) costs 4 credits".
-        // If the user uploads 1 image, we generate 1 result?
-        // Wait, the new workflow is "Upload 3-4 photos... generate consistency".
-        // The logic below generates variations for EACH input image.
-        // Let's stick to the plan: "1 Generation Request = 4 Credits".
+        // COST: 4 credits per generation request
         const CREDIT_COST = 4;
 
         // Run Transaction to Check & Deduct Credits
@@ -69,11 +53,15 @@ export async function POST(req: NextRequest) {
 
         // --- Logic Continues ---
 
-        // 1. Convert ALL to Base64 (Server-side compatible)
-        console.log(`Processing ${files.length} images...`);
-        const originalsBase64 = await Promise.all(files.map(async (file) => {
-            const buffer = await file.arrayBuffer();
-            return `data:${file.type};base64,${Buffer.from(buffer).toString("base64")}`;
+        // 1. Fetch Images from URLs and Convert to Base64
+        console.log(`Fetching ${imageUrls.length} images from URLs...`);
+        const originalsBase64 = await Promise.all(imageUrls.map(async (url: string) => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Failed to fetch image: ${url}`);
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const contentType = response.headers.get("content-type") || "image/png";
+            return `data:${contentType};base64,${buffer.toString("base64")}`;
         }));
 
         // 2. Analyze with Gemini (Get 4 prompts using ALL images as context)
@@ -104,7 +92,7 @@ export async function POST(req: NextRequest) {
         }));
 
         return NextResponse.json({
-            originals: originalsBase64,
+            originals: imageUrls, // Return URLs back
             results: results
         });
 

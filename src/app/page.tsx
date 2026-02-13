@@ -12,7 +12,7 @@ import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import Link from "next/link";
 import { History, Sparkles } from "lucide-react";
-import { saveToHistory, uploadImage } from "@/lib/firestore";
+import { saveToHistory, uploadImage, uploadFile } from "@/lib/firestore";
 import { useCredits } from "@/hooks/useCredits";
 import { v4 as uuidv4 } from "uuid";
 import { useLanguage } from "@/lib/i18n";
