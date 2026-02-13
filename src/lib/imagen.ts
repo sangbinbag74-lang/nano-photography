@@ -43,35 +43,33 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Final Working Strategy: Style-Based Generation (Variation)
-        // 1. Model: capability-001 (Parses 'Flattened' structure correctly).
-        // 2. Data: REFERENCE_TYPE_STYLE (Treats input as a style reference, not an edit target).
-        //          This generates a NEW image based on the prompt + style of input.
-        //          Crucially, this bypasses the need for a 'Mask' or 'editConfig'.
-        const modelId = "imagen-3.0-capability-001";
+        // Final Fix: Dynamic MimeType + Generate-001
+        // The root cause of 'Invalid Argument' is likely MimeType mismatch (Hardcoded PNG vs Input JPEG).
+        // 1. Extract real MimeType from data URI.
+        // 2. Use 'imagen-3.0-generate-001' which uses the standard 'image' field (not referenceImages).
+        // 3. Remove 'aspectRatio' to respect input dimensions.
+
+        const matches = imageBase64.match(/^data:(image\/\w+);base64,/);
+        const mimeType = matches ? matches[1] : "image/png";
+        const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+
+        const modelId = "imagen-3.0-generate-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
         const payload = {
             instances: [
                 {
                     prompt: prompt,
-                    referenceImages: [
-                        {
-                            referenceType: "REFERENCE_TYPE_STYLE",
-                            referenceId: 1,
-                            referenceImage: {
-                                // Flattened structure (Proven to be parsed by capability model)
-                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                mimeType: "image/png"
-                            }
-                        }
-                    ]
+                    image: {
+                        bytesBase64Encoded: cleanBase64,
+                        mimeType: mimeType
+                    }
                 }
             ],
             parameters: {
                 sampleCount: 1,
-                aspectRatio: _aspectRatio,
-                // No editConfig needed for Style Generation
+                // Remove aspectRatio to avoid conflict with input image
+                negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
 
