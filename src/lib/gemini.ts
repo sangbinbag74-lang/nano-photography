@@ -46,8 +46,8 @@ Step 2: 추출된 제품 정보를 통해 아래 4가지 출력 양식 스타일
 `;
 
 export async function analyzeImage(imagesBase64: string[]): Promise<PromptResult[]> {
-  // Trying specific version 001 as aliases might be unstable in some regions/env
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+  // Updated to Gemini 2.0 Flash (Stable 2025)
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const promptParts: any[] = [SYSTEM_PROMPT];
 
