@@ -61,7 +61,10 @@ export async function generateBackground(
                             referenceImage: {
                                 image: {
                                     bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                    mimeType: "image/png"
+                                    // mimeType is optional in some versions but good practice. 
+                                    // The error "Image should have either uri or image bytes" usually means
+                                    // it couldn't find 'bytesBase64Encoded' at the expected path.
+                                    // Path: referenceImages -> referenceImage -> image -> bytesBase64Encoded
                                 }
                             }
                         }
@@ -71,8 +74,7 @@ export async function generateBackground(
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // editConfig is optional, often not needed for raw variation unless specific mode is required.
-                // Keeping it clean to avoid schema validation errors for unknown fields.
+                // editConfig is optional.
             }
         };
 
