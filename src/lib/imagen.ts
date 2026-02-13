@@ -43,37 +43,29 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Reverting to Capability Model - Generate 001 is Text-to-Image only (hence 500 Error)
-        // We must fix the 400 Error (Payload Structure) in Capability Model.
-        const modelId = "imagen-3.0-capability-001";
+        // Switching to Generate 001 - The most robust model for general generation
+        // capability-001 is too strict with payload structure.
+        const modelId = "imagen-3.0-generate-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
-        // Verified Output: Payload for Imagen 3 Capability Model
-        // The previous 400 error "Image should have either uri or image bytes" indicates
-        // we likely missed the nesting 'referenceImage' -> 'image'.
+        // Simple Payload for Generate 001
+        // This structure is standard for Vertex AI prediction with image input
         const payload = {
             instances: [
                 {
                     prompt: prompt,
-                    referenceImages: [
-                        {
-                            referenceType: "REFERENCE_TYPE_RAW",
-                            referenceId: 1,
-                            // Flattened: DIRECT encoding. 
-                            // 'image' wrapper was likely the cause of 'missing bytes' error if the API expects the Image properties here.
-                            bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                            mimeType: "image/png"
-                        }
-                    ]
+                    image: {
+                        bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                        mimeType: "image/png"
+                    }
                 }
             ],
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // Removed editConfig to test if it's optional for default variation.
-                // If it fails with 'editConfig required', we will know.
-                // If it works, we avoided the invalid manual config.
+                // generate-001 supports negative prompts
+                negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
 
