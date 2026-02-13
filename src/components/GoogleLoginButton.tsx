@@ -21,20 +21,15 @@ export default function GoogleLoginButton() {
 
     const handleLogin = async () => {
         try {
-            console.log("Starting Google login popup...");
             const result = await signInWithPopup(auth, googleProvider);
-            console.log("Google login successful, user:", result.user?.email);
-
             if (result.user) {
-                console.log("Calling saveUser...");
                 await saveUser(result.user);
-                console.log("saveUser completed.");
             }
         } catch (error: any) {
-            console.error("Login flow failed", error);
+            console.error("Login failed", error);
             const errorMessage = error?.message || "Unknown error";
             const errorCode = error?.code || "No code";
-            alert(`Login/Save Failed: ${errorMessage} (${errorCode})`);
+            alert(`Login Failed: ${errorMessage} (${errorCode})`);
         }
     };
 

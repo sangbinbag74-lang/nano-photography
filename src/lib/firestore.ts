@@ -67,13 +67,11 @@ export async function getUserHistory(userId: string): Promise<HistoryItem[]> {
 }
 
 export async function saveUser(user: { uid: string; email: string | null; displayName: string | null; photoURL: string | null }) {
-    console.log("Attempting to save user:", user.uid, user.email);
     try {
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
-            console.log("User does not exist, creating new user document...");
             await setDoc(userRef, {
                 uid: user.uid,
                 email: user.email,
@@ -85,17 +83,14 @@ export async function saveUser(user: { uid: string; email: string | null; displa
                 status: "active",
                 roles: ["user"]
             });
-            console.log("User created in Firestore successfully.");
+            console.log("User created in Firestore");
         } else {
-            console.log("User exists, updating last login...");
             // Update last login
             await setDoc(userRef, {
                 lastLogin: Timestamp.now()
             }, { merge: true });
-            console.log("User last login updated.");
         }
     } catch (e) {
-        console.error("Error saving user to Firestore: ", e);
-        throw e; // Re-throw to catch in component
+        console.error("Error saving user: ", e);
     }
 }
