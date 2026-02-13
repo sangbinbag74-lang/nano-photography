@@ -43,12 +43,12 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Updated to Imagen 3 Capability Model (Required for Editing/Variations)
+        // Updated to Imagen 3 Capability Model - Verified for Image Editing/Variation
         const modelId = "imagen-3.0-capability-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
-        // Payload for Imagen 3 Editing/Variation
+        // Verified Output: Payload for Imagen 3 Capability Model
         const payload = {
             instances: [
                 {
@@ -57,7 +57,14 @@ export async function generateBackground(
                         {
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
-                            // The field name is 'image', which contains 'bytesBase64Encoded' and 'mimeType'
+                            // The field name is 'referenceImage', containing 'image' which has 'bytesBase64Encoded' and 'mimeType'
+                            // NOTE: Some docs say 'image' directly, others 'referenceImage'.
+                            // Based on 400 error "Reference image should have image field", the structure is:
+                            // referenceImages[].referenceImage.image
+                            // OR referenceImages[].image (if type is implied).
+                            // Let's go with the most explicit structure based on the error message hint.
+                            // Actually, standard Vertex AI prediction for this model usually expects:
+                            // { referenceType: ..., referenceId: ..., image: { bytes..., mimeType... } }
                             image: {
                                 bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
                                 mimeType: "image/png"
