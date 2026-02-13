@@ -289,7 +289,8 @@ export default function Home() {
                           const updatedStyle = updatedResults.find(r => r.style === opt.style);
                           setSelectedResult(updatedStyle);
                         } else {
-                          alert("Failed to generate. Please try again.");
+                          const errData = await res.json().catch(() => ({}));
+                          alert(`Generation failed: ${errData.error || "Unknown error"}`);
                         }
                       } catch (e) {
                         console.error("Generation error:", e);
