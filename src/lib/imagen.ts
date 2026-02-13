@@ -51,19 +51,17 @@ export async function generateBackground(
         // 3. Model: capability-001 (Correct model).
         // 4. MimeType: Dynamic (Correct data format).
 
-        // Final Strategy: Resize + BGSWAP (No Mask)
-        // 1. Resize: "Invalid Argument" can be caused by images > 1024px or odd aspect ratios.
-        //    We resize to max 1024x1024 (fit: inside) to satisfy API limits.
-        // 2. Mode: EDIT_MODE_BGSWAP. This uses Auto-Segmentation.
-        //    we REMOVE the mask entirely to avoid "Invalid Argument" on mask format.
-        // 3. Format: Force PNG.
+        // Final Strategy: Resize + PNG + White Mask + Default Mode
+        // 1. Data passed validation (Step 1531 error was Config, not Argument).
+        // 2. We restore EDIT_MODE_DEFAULT (Standard Editing) which mandates a Mask.
+        // 3. We generate a perfect RGB PNG White Mask matching the RESIZED input.
 
         const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
         const inputBuffer = Buffer.from(cleanBase64, "base64");
 
         const sharpImage = sharp(inputBuffer);
 
-        // Resize to max 1024px on longest side, keeping aspect ratio
+        // 1. Resize Input (Max 1024px) & Force PNG
         const processedInputBuffer = await sharpImage
             .resize({ width: 1024, height: 1024, fit: "inside" })
             .png()
@@ -71,7 +69,24 @@ export async function generateBackground(
 
         const processedInputBase64 = processedInputBuffer.toString("base64");
 
-        // NO MASK GENERATION NEEDED for BGSWAP
+        // Get dimensions of the RESIZED image to match mask
+        const processedMetadata = await sharp(processedInputBuffer).metadata();
+        const width = processedMetadata.width || 1024;
+        const height = processedMetadata.height || 1024;
+
+        // 2. Generate White Mask (RGB 3-Channels) MATCHING Resized Input
+        const maskBuffer = await sharp({
+            create: {
+                width: width,
+                height: height,
+                channels: 3,
+                background: { r: 255, g: 255, b: 255 }
+            }
+        })
+            .png()
+            .toBuffer();
+
+        const generatedMaskBase64 = maskBuffer.toString("base64");
 
         const modelId = "imagen-3.0-capability-001";
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
@@ -88,8 +103,15 @@ export async function generateBackground(
                                 bytesBase64Encoded: processedInputBase64,
                                 mimeType: "image/png"
                             }
+                        },
+                        {
+                            referenceType: "REFERENCE_TYPE_MASK",
+                            referenceId: 2,
+                            referenceImage: {
+                                bytesBase64Encoded: generatedMaskBase64,
+                                mimeType: "image/png"
+                            }
                         }
-                        // Mask removed
                     ]
                 }
             ],
@@ -97,8 +119,8 @@ export async function generateBackground(
                 sampleCount: 1,
                 editConfig: {
                     baseImageReferenceId: 1,
-                    // maskReferenceId removed
-                    editMode: "EDIT_MODE_BGSWAP"
+                    maskReferenceId: 2,
+                    editMode: "EDIT_MODE_DEFAULT"
                 },
                 negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
