@@ -57,9 +57,10 @@ export async function generateBackground(
                         {
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
+                            // The field name is 'image', which contains 'bytesBase64Encoded' and 'mimeType'
                             image: {
                                 bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                mimeType: "image/png" // Required by Imagen 3
+                                mimeType: "image/png"
                             },
                         },
                         // If mask is provided and different from image, include it.
