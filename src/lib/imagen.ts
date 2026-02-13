@@ -60,12 +60,10 @@ export async function generateBackground(
                         {
                             referenceType: "REFERENCE_TYPE_RAW",
                             referenceId: 1,
-                            referenceImage: {
-                                // Flattened structure: The API likely expects the Image object properties directly here
-                                // or 'bytesBase64Encoded' is the direct field for raw image data.
-                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                                mimeType: "image/png"
-                            }
+                            // Flattened: DIRECT encoding. 
+                            // 'image' wrapper was likely the cause of 'missing bytes' error if the API expects the Image properties here.
+                            bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                            mimeType: "image/png"
                         }
                     ]
                 }
@@ -73,12 +71,9 @@ export async function generateBackground(
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // editConfig is required for editing tasks.
-                // We use EDIT_MODE_DEFAULT for general image editing/variation.
-                editConfig: {
-                    baseImageReferenceId: 1,
-                    editMode: "EDIT_MODE_DEFAULT"
-                }
+                // Removed editConfig to test if it's optional for default variation.
+                // If it fails with 'editConfig required', we will know.
+                // If it works, we avoided the invalid manual config.
             }
         };
 
