@@ -43,28 +43,35 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Switching to Generate 001 - The most robust model for general generation
-        // capability-001 is too strict with payload structure.
+        // Retrying Generate 001 but with ReferenceImages structure.
+        // The error "Reference image should have image field" when using 'image' payload
+        // suggests this model version EXPECTS referenceImages for image input.
         const modelId = "imagen-3.0-generate-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
-        // Simple Payload for Generate 001
-        // This structure is standard for Vertex AI prediction with image input
+        // Payload: flattened referenceImages structure
         const payload = {
             instances: [
                 {
                     prompt: prompt,
-                    image: {
-                        bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                        mimeType: "image/png"
-                    }
+                    referenceImages: [
+                        {
+                            referenceType: "REFERENCE_TYPE_RAW",
+                            referenceId: 1,
+                            referenceImage: {
+                                // Flattened structure verified to pass parsing in capability model.
+                                // Applying it here to generate-001.
+                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                                mimeType: "image/png"
+                            }
+                        }
+                    ]
                 }
             ],
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // generate-001 supports negative prompts
                 negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
             }
         };
