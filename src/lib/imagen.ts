@@ -43,27 +43,34 @@ export async function generateBackground(
         // For Imagen 3, we might need 'imagen-3.0-generate-001' if available or check specific docs.
         // Falling back to 'imagegeneration@006' (Imagen 2) as it's widely available on Vertex, 
         // or trying the new model ID if user has allowlist access.
-        // Switching to Generate 001 with simple payload to avoid 400 errors with referenceImages
-        const modelId = "imagen-3.0-generate-001";
+        // Updated to Imagen 3 Capability Model (Required for Editing/Variations)
+        const modelId = "imagen-3.0-capability-001";
 
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
-        // Simple Payload (Image-to-Image / Prompt Driven)
+        // Payload for Imagen 3 Editing/Variation
         const payload = {
             instances: [
                 {
                     prompt: prompt,
-                    image: {
-                        bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
-                        mimeType: "image/png"
-                    }
+                    referenceImages: [
+                        {
+                            referenceType: "REFERENCE_TYPE_RAW",
+                            referenceId: 1,
+                            // The field name is 'image', which contains 'bytesBase64Encoded' and 'mimeType'
+                            image: {
+                                bytesBase64Encoded: imageBase64.replace(/^data:image\/\w+;base64,/, ""),
+                                mimeType: "image/png"
+                            },
+                        }
+                    ]
                 }
             ],
             parameters: {
                 sampleCount: 1,
                 aspectRatio: _aspectRatio,
-                // generate-001 supports negativePrompt, ensuring quality
-                negativePrompt: "low quality, text, watermark, blur, deformed",
+                // editConfig is optional but recommended if we want to ensure 'product-image' or similar behavior
+                // For now, leaving it implicit based on prompt + reference.
             }
         };
 
