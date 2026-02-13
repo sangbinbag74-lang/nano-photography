@@ -82,10 +82,12 @@ export async function generateBackground(
         // CRITICAL: Must use v1beta1 for Reference Images
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1beta1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
+        const safePrompt = prompt || "A high quality image of the subject"; // Fallback to prevent 400 error
+
         const payload = {
             instances: [
                 {
-                    prompt: prompt,
+                    prompt: safePrompt,
                     referenceImages: [
                         {
                             referenceType: "REFERENCE_TYPE_SUBJECT",
@@ -94,7 +96,7 @@ export async function generateBackground(
                                 bytesBase64Encoded: processedInputBase64,
                                 mimeType: "image/png"
                             },
-                            subjectDescription: "Main subject of the image" // Required for Subject Reference
+                            subjectDescription: "The main product or object shown in this image" // Updated to prevent 400 INVALID_ARGUMENT
                         }
                     ]
                 }
@@ -107,7 +109,19 @@ export async function generateBackground(
             }
         };
 
-        console.log("Imagen Payload:", JSON.stringify(payload, null, 2));
+        console.log("Imagen Payload:", JSON.stringify({
+            ...payload,
+            instances: payload.instances.map(inst => ({
+                ...inst,
+                referenceImages: inst.referenceImages?.map(ref => ({
+                    ...ref,
+                    referenceImage: {
+                        ...ref.referenceImage,
+                        bytesBase64Encoded: "(BASE64_STRING_TRUNCATED)" // Don't log full base64
+                    }
+                }))
+            }))
+        }, null, 2));
 
         const response = await fetch(endpoint, {
             method: "POST",
