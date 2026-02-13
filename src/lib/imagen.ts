@@ -62,9 +62,15 @@ export async function generateBackground(
 
         const sharpImage = sharp(inputBuffer);
 
-        // 1. Resize Input (Max 1024px) & Force PNG
+        // 1. Resize Input (Force 1024x1024 with white padding) & Force PNG
+        // Imagen 3 Subject Reference requires 1:1 aspect ratio (square) input.
         const processedInputBuffer = await sharpImage
-            .resize({ width: 1024, height: 1024, fit: "inside" })
+            .resize({
+                width: 1024,
+                height: 1024,
+                fit: "contain",
+                background: { r: 255, g: 255, b: 255, alpha: 1 }
+            })
             .png()
             .toBuffer();
 
@@ -96,8 +102,8 @@ export async function generateBackground(
             parameters: {
                 sampleCount: 1,
                 priority: "sampleCount", // Optional but good for v1beta1
-                negativePrompt: "low quality, text, watermark, blur, deformed, mutation",
-                aspectRatio: "3:4" // Explicitly request 3:4 to match typical portrait/product needs
+                negativePrompt: "low quality, text, watermark, blur, deformed, mutation"
+                // aspectRatio: "3:4" // Removing this as it conflicts with Subject Reference (must use default 1:1)
             }
         };
 
