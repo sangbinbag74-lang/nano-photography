@@ -25,6 +25,7 @@ export default function Home() {
   const { credits, loading: creditsLoading } = useCredits();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [uploadedUrls, setUploadedUrls] = useState<string[]>([]); // New state to store Storage URLs
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [selectedResult, setSelectedResult] = useState<any | null>(null);
@@ -81,11 +82,12 @@ export default function Home() {
       // 1. Upload images to Firebase Storage first (Client-side)
       // This bypasses the Vercel/Next.js body size limit (4.5MB)
       console.log("Uploading images to storage...");
-      const uploadedUrls = await Promise.all(files.map(async (file) => {
+      const uploadedUrlsList = await Promise.all(files.map(async (file) => {
         const path = `uploads/${user.uid}/${uuidv4()}_input.png`;
         const url = await uploadFile(file, path);
         return url;
       }));
+      setUploadedUrls(uploadedUrlsList);
 
       // 2. Send URLs to API
       const response = await fetch("/api/process", {
@@ -95,7 +97,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           userId: user.uid,
-          imageUrls: uploadedUrls
+          imageUrls: uploadedUrlsList
         }),
       });
 
@@ -254,9 +256,53 @@ export default function Home() {
                     description: r.description,
                     imageUrl: r.generatedImages[0]
                   }))}
-                  onSelect={(opt) => {
-                    const fullRes = results.find(r => r.style === opt.style);
-                    setSelectedResult(fullRes);
+                  onSelect={async (opt) => {
+                    const styleToSelect = results.find(r => r.style === opt.style);
+                    if (!styleToSelect) return;
+
+                    // If we only have the preview (1 image), generate the remaining 3 images now
+                    if (styleToSelect.generatedImages.length <= 1) {
+                      setIsAnalyzing(true); // Shows LoadingOverlay because selectedResult is still null
+
+                      try {
+                        const res = await fetch("/api/generate-variation", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            userId: user?.uid,
+                            imageUrls: uploadedUrls,
+                            style: opt.style,
+                            prompt: styleToSelect.description
+                          })
+                        });
+
+                        if (res.ok) {
+                          const data = await res.json();
+                          // Update results with the newly generated images
+                          const updatedResults = results.map(r => {
+                            if (r.style === opt.style) {
+                              return { ...r, generatedImages: data.generatedImages };
+                            }
+                            return r;
+                          });
+                          setResults(updatedResults);
+
+                          // Select the UPDATED result so we see all 4 images
+                          const updatedStyle = updatedResults.find(r => r.style === opt.style);
+                          setSelectedResult(updatedStyle);
+                        } else {
+                          alert("Failed to generate variations. Please try again.");
+                        }
+                      } catch (e) {
+                        console.error("Variation generation error:", e);
+                        alert("An error occurred while generating variations.");
+                      } finally {
+                        setIsAnalyzing(false);
+                      }
+                    } else {
+                      // Already have all images, just select
+                      setSelectedResult(styleToSelect);
+                    }
                   }}
                 />
               </div>

@@ -28,8 +28,9 @@ export default function StyleSelector({ options, onSelect }: StyleSelectorProps)
                     className="group relative rounded-3xl overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2"
                     onClick={() => onSelect?.(option)}
                 >
-                    {/* Background Image Container */}
-                    <div className="aspect-[16/10] relative overflow-hidden bg-white/5">
+                >
+                    {/* Background Container */}
+                    <div className="aspect-[16/10] relative overflow-hidden bg-white/5 group-hover:bg-white/10 transition-colors duration-500">
                         {option.imageUrl ? (
                             <img
                                 src={option.imageUrl}
@@ -37,14 +38,19 @@ export default function StyleSelector({ options, onSelect }: StyleSelectorProps)
                                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                             />
                         ) : (
-                            <div className="absolute inset-0 flex items-center justify-center">
+                            // Text-Only Mode (Gradient Background)
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-br from-white/5 to-white/0 group-hover:from-blue-900/20 group-hover:to-purple-900/20 transition-all duration-500">
                                 {option.isLoading ? (
                                     <div className="animate-pulse flex flex-col items-center gap-2">
                                         <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                                         <span className="text-xs text-white/30 uppercase tracking-widest">Generating...</span>
                                     </div>
                                 ) : (
-                                    <Sparkles className="w-8 h-8 text-white/10" />
+                                    <div className="text-center group-hover:-translate-y-2 transition-transform duration-500">
+                                        <Sparkles className="w-8 h-8 text-white/20 mx-auto mb-4" />
+                                        <h3 className="text-2xl font-light text-white tracking-widest uppercase mb-2">{option.style}</h3>
+                                        <div className="w-8 h-[1px] bg-white/20 mx-auto" />
+                                    </div>
                                 )}
                             </div>
                         )}

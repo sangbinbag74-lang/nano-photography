@@ -68,31 +68,15 @@ export async function POST(req: NextRequest) {
         console.log("Analyzing images with Gemini...");
         const analysisResults = await analyzeImage(originalsBase64);
 
-        // 3. Generate images for EACH input image x EACH style
-        console.log("Generating variations...");
-
-        // Map over each style (e.g., Luxury, Nature)
-        const results = await Promise.all(analysisResults.map(async (styleData) => {
-
-            // For this style, generate a version for EACH original image
-            const styleGenerations = await Promise.all(originalsBase64.map(async (original, idx) => {
-                const mask = original;
-                return await generateBackground(
-                    original,
-                    mask,
-                    styleData.prompt
-                );
-            }));
-
-            return {
-                style: styleData.style,
-                description: styleData.description,
-                generatedImages: styleGenerations,
-            };
+        // 3. Return Text-Only Options (No Image Generation yet)
+        const results = analysisResults.map(styleData => ({
+            style: styleData.style,
+            description: styleData.description,
+            generatedImages: [] // Empty initially
         }));
 
         return NextResponse.json({
-            originals: imageUrls, // Return URLs back
+            originals: imageUrls,
             results: results
         });
 
