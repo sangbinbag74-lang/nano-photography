@@ -42,6 +42,23 @@ export const en = {
         sign_out: "Sign Out",
         login_required: "Login required.",
         history: "History",
+        phone_verification: {
+            title_input: "Verify Phone Number",
+            title_verify: "Enter Verification Code",
+            desc_input: "To receive 5 free credits, please verify your phone number.",
+            desc_verify: "Code sent to",
+            label_phone: "Phone Number (with Country Code)",
+            placeholder_phone: "+82 10-1234-5678",
+            helper_phone: "Global format required. Example: +821012345678",
+            label_code: "6-Digit Verification Code",
+            btn_cancel: "Cancel",
+            btn_send: "Send Code",
+            btn_change: "Change Number",
+            btn_verify: "Verify & Sign In",
+            error_invalid_phone: "Phone number must include country code",
+            error_invalid_code: "Invalid verification code",
+            success: "Verification Successful! 5 Free credits added.",
+        }
     },
     gallery: {
         title: "My Gallery",

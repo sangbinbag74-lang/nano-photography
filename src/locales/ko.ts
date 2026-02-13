@@ -44,6 +44,23 @@ export const ko: Translations = {
         sign_out: "로그아웃",
         login_required: "로그인이 필요합니다.",
         history: "히스토리",
+        phone_verification: {
+            title_input: "휴대폰 번호 인증",
+            title_verify: "인증번호 입력",
+            desc_input: "무료 5 크레딧을 받으려면 휴대폰 인증이 필요합니다.",
+            desc_verify: "인증번호가 전송되었습니다:",
+            label_phone: "휴대폰 번호",
+            placeholder_phone: "010-1234-5678",
+            helper_phone: "국가 번호를 선택하고 전화번호를 입력하세요.",
+            label_code: "인증번호 6자리",
+            btn_cancel: "취소",
+            btn_send: "인증번호 발송",
+            btn_change: "번호 변경",
+            btn_verify: "인증 및 로그인",
+            error_invalid_phone: "올바른 전화번호를 입력해주세요.",
+            error_invalid_code: "잘못된 인증번호입니다",
+            success: "인증 완료! 5 크레딧이 지급되었습니다.",
+        }
     },
     gallery: {
         title: "내 갤러리",

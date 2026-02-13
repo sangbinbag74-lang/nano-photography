@@ -5,6 +5,7 @@ import { auth } from "@/lib/firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { Loader2, Phone, ShieldCheck } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { countries } from "@/lib/countries";
 
 interface PhoneVerificationModalProps {
     isOpen: boolean;
@@ -21,12 +22,15 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
 
+    // Default to Korea or first country
+    const [selectedCountry, setSelectedCountry] = useState(countries.find(c => c.code === "KR") || countries[0]);
+
     useEffect(() => {
         if (isOpen && !window.recaptchaVerifier) {
             window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
                 'size': 'invisible',
                 'callback': () => {
-                    // reCAPTCHA solved, allow signInWithPhoneNumber.
+                    // reCAPTCHA solved
                 }
             });
         }
@@ -44,13 +48,18 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
         setIsLoading(true);
 
         try {
-            // Basic validation
-            if (!phoneNumber.startsWith("+")) {
-                throw new Error("Phone number must include country code (e.g. +821012345678)");
+            // Remove leading zero if present for better compatibility
+            let cleanedPhone = phoneNumber.startsWith("0") ? phoneNumber.substring(1) : phoneNumber;
+            cleanedPhone = cleanedPhone.replace(/-/g, "").trim();
+
+            if (!cleanedPhone) {
+                throw new Error(t.auth.phone_verification.error_invalid_phone);
             }
 
+            const fullPhoneNumber = `${selectedCountry.dial_code}${cleanedPhone}`;
+
             const appVerifier = window.recaptchaVerifier;
-            const confirmation = await signInWithPhoneNumber(auth, phoneNumber.replace(/-/g, ""), appVerifier);
+            const confirmation = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
             setConfirmationResult(confirmation);
             setStep("verify");
         } catch (err: any) {
@@ -80,7 +89,7 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
             onClose();
         } catch (err: any) {
             console.error("Verification Error:", err);
-            setError("Invalid verification code. Please try again.");
+            setError(t.auth.phone_verification.error_invalid_code);
         } finally {
             setIsLoading(false);
         }
@@ -89,7 +98,7 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <div className="w-full max-w-md bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 shadow-2xl relative">
                 <div id="recaptcha-container" className="invisible absolute"></div>
 
@@ -99,12 +108,12 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
                     </div>
                     <div>
                         <h3 className="text-xl font-bold text-white">
-                            {step === "input" ? "Verify Phone Number" : "Enter Verification Code"}
+                            {step === "input" ? t.auth.phone_verification.title_input : t.auth.phone_verification.title_verify}
                         </h3>
                         <p className="text-sm text-white/50">
                             {step === "input"
-                                ? "To receive 5 free credits, please verify your phone number."
-                                : `Code sent to ${phoneNumber}`}
+                                ? t.auth.phone_verification.desc_input
+                                : `${t.auth.phone_verification.desc_verify} ${selectedCountry.dial_code} ${phoneNumber}`}
                         </p>
                     </div>
                 </div>
@@ -119,18 +128,36 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
                     <form onSubmit={handleSendCode} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-white/70 mb-1">
-                                Phone Number (with Country Code)
+                                {t.auth.phone_verification.label_phone}
                             </label>
-                            <input
-                                type="tel"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                placeholder="+82 10-1234-5678"
-                                className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-white/20"
-                                required
-                            />
+                            <div className="flex gap-2">
+                                <div className="relative w-[140px]">
+                                    <select
+                                        value={selectedCountry.code}
+                                        onChange={(e) => setSelectedCountry(countries.find(c => c.code === e.target.value) || countries[0])}
+                                        className="w-full appearance-none bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors pr-8 cursor-pointer text-sm"
+                                    >
+                                        {countries.map(country => (
+                                            <option key={country.code} value={country.code} className="bg-gray-900 text-white">
+                                                {country.flag} {country.dial_code}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/50 text-xs">
+                                        ▼
+                                    </div>
+                                </div>
+                                <input
+                                    type="tel"
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    placeholder="10-1234-5678"
+                                    className="flex-1 bg-black/30 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 transition-colors placeholder:text-white/20"
+                                    required
+                                />
+                            </div>
                             <p className="mt-1 text-xs text-white/30">
-                                Global format required. Example: +821012345678 or +12125551234
+                                {selectedCountry.name} ({selectedCountry.code}) selected
                             </p>
                         </div>
                         <div className="flex gap-3 pt-2">
@@ -139,7 +166,7 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
                                 onClick={onClose}
                                 className="flex-1 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 font-medium transition-colors"
                             >
-                                Cancel
+                                {t.auth.phone_verification.btn_cancel}
                             </button>
                             <button
                                 type="submit"
@@ -147,7 +174,7 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
                                 className="flex-1 px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                                Send Code
+                                {t.auth.phone_verification.btn_send}
                             </button>
                         </div>
                     </form>
@@ -155,7 +182,7 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
                     <form onSubmit={handleVerifyCode} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-white/70 mb-1">
-                                6-Digit Verification Code
+                                {t.auth.phone_verification.label_code}
                             </label>
                             <input
                                 type="text"
@@ -173,7 +200,7 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
                                 onClick={() => setStep("input")}
                                 className="flex-1 px-4 py-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 font-medium transition-colors"
                             >
-                                Change Number
+                                {t.auth.phone_verification.btn_change}
                             </button>
                             <button
                                 type="submit"
@@ -181,7 +208,7 @@ export default function PhoneVerificationModal({ isOpen, onClose, onVerified }: 
                                 className="flex-1 px-4 py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                                Verify & Sign In
+                                {t.auth.phone_verification.btn_verify}
                             </button>
                         </div>
                     </form>
