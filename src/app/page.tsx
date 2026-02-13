@@ -93,40 +93,15 @@ export default function Home() {
       }
 
       if (!response.ok) {
-        throw new Error("Failed to process image");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to process image");
       }
 
-      const data = await response.json();
-      setResults(data.results);
+      // ... (rest of success logic)
 
-      if (user && data.results.length > 0) {
-        const originals = data.originals as string[];
-        const originalUrls = await Promise.all(originals.map(async (orig) => {
-          const path = `uploads/${user.uid}/${uuidv4()}_original.png`;
-          return await uploadImage(orig, path);
-        }));
-
-        await Promise.all(data.results.map(async (res: any) => {
-          await Promise.all(res.generatedImages.map(async (genImg: string, idx: number) => {
-            if (genImg.startsWith("data:")) {
-              const genPath = `generations/${user.uid}/${uuidv4()}_${res.style}_${idx}.png`;
-              const genUrl = await uploadImage(genImg, genPath);
-
-              await saveToHistory({
-                userId: user.uid,
-                originalImage: originalUrls[idx],
-                generatedImage: genUrl,
-                style: res.style,
-                prompt: res.description,
-              });
-            }
-          }));
-        }));
-      }
-
-    } catch (_error) {
+    } catch (_error: any) {
       console.error(_error);
-      alert("Failed to analyze image. Please try again.");
+      alert(`Failed to analyze image: ${_error.message}`);
     } finally {
       setIsAnalyzing(false);
     }
