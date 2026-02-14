@@ -62,16 +62,17 @@ export async function generateBackground(
 
         const sharpImage = sharp(inputBuffer);
 
-        // 1. Resize Input (Force 1024x1024 with white padding) & Force PNG
+        // 1. Resize Input (Force 1024x1024 with white padding) & Force JPEG
         // Imagen 3 Subject Reference requires 1:1 aspect ratio (square) input.
         const processedInputBuffer = await sharpImage
+            .rotate() // Auto-orient based on EXIF
             .resize({
                 width: 1024,
                 height: 1024,
                 fit: "contain",
                 background: { r: 255, g: 255, b: 255, alpha: 1 }
             })
-            .png()
+            .jpeg({ quality: 90 }) // Switch to JPEG for smaller payload/better compatibility
             .toBuffer();
 
         const processedInputBase64 = processedInputBuffer.toString("base64");
@@ -82,21 +83,21 @@ export async function generateBackground(
         // CRITICAL: Must use v1beta1 for Reference Images
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1beta1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
-        const safePrompt = prompt || "A high quality image of the subject"; // Fallback to prevent 400 error
+        // const safePrompt = prompt || "A high quality image of the subject"; // Removed fallback as per user request
 
         const payload = {
             instances: [
                 {
-                    prompt: safePrompt,
+                    prompt: prompt, // Prompt must be provided by caller
                     referenceImages: [
                         {
                             referenceType: "REFERENCE_TYPE_SUBJECT",
                             referenceId: 1,
                             referenceImage: {
                                 bytesBase64Encoded: processedInputBase64,
-                                mimeType: "image/png"
+                                mimeType: "image/jpeg"
                             },
-                            subjectDescription: "The main product or object shown in this image" // Updated to prevent 400 INVALID_ARGUMENT
+                            subjectDescription: "The main product or object shown in this image" // Reverted to English as Korean caused 400 error
                         }
                     ]
                 }

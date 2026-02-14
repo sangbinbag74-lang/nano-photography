@@ -8,6 +8,10 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const { userId, imageUrls, style, prompt } = body;
 
+        if (!prompt || typeof prompt !== 'string' || prompt.trim() === '') {
+            return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
+        }
+
         console.log(`Generating variations for style: ${style}`);
 
         // Credit Check (Optional: maybe charge less for variations or charge upfront?)
