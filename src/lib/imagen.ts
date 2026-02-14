@@ -62,7 +62,7 @@ export async function generateBackground(
 
         const sharpImage = sharp(inputBuffer);
 
-        // 1. Resize Input (Force 1024x1024 with white padding) & Force JPEG
+        // 1. Resize Input (Force 1024x1024 with white padding) & Force PNG
         // Imagen 3 Subject Reference requires 1:1 aspect ratio (square) input.
         const processedInputBuffer = await sharpImage
             .rotate() // Auto-orient based on EXIF
@@ -72,7 +72,7 @@ export async function generateBackground(
                 fit: "contain",
                 background: { r: 255, g: 255, b: 255, alpha: 1 }
             })
-            .jpeg({ quality: 90 }) // Switch to JPEG for smaller payload/better compatibility
+            .png() // Revert to PNG as JPEG caused 400 error
             .toBuffer();
 
         const processedInputBase64 = processedInputBuffer.toString("base64");
@@ -80,7 +80,7 @@ export async function generateBackground(
         // NO Mask required for 'generate-001' subject reference
 
         const modelId = "imagen-3.0-generate-001";
-        // CRITICAL: Must use v1beta1 for Reference Images
+        // CRITICAL: Must use v1beta1 forReference Images
         const endpoint = `https://${location}-aiplatform.googleapis.com/v1beta1/projects/${GOOGLE_PROJECT_ID}/locations/${location}/publishers/google/models/${modelId}:predict`;
 
         // const safePrompt = prompt || "A high quality image of the subject"; // Removed fallback as per user request
@@ -95,7 +95,7 @@ export async function generateBackground(
                             referenceId: 1,
                             referenceImage: {
                                 bytesBase64Encoded: processedInputBase64,
-                                mimeType: "image/jpeg"
+                                mimeType: "image/png" // Revert to png
                             },
                             subjectDescription: "The main product or object shown in this image" // Reverted to English as Korean caused 400 error
                         }
